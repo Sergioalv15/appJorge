@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "appJorge",
+    "slug": "appjorge",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "appjorge",
+    "userInterfaceStyle": "light",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "android": {
+      "package": "com.appjorge.mobile"
+    },
+    "ios": {
+      "bundleIdentifier": "com.appjorge.mobile",
+      "supportsTablet": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a2d4a416-7bd0-456e-a2b1-9e0852893716"
+      }
+    },
+    "owner": "sergioalv15"
+  }
+}
