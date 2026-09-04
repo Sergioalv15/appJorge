@@ -34,7 +34,6 @@ export function CalendarViewModeToggle({ mode, onToggle }: Props) {
           borderColor: theme.colors.border,
           borderRadius: theme.radius.sm,
           paddingHorizontal: theme.spacing.sm,
-          marginRight: theme.spacing.sm,
         },
         pressed ? styles.togglePressed : null,
       ]}
