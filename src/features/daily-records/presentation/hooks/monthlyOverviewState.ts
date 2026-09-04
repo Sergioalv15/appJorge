@@ -14,7 +14,7 @@ export interface UseMonthlyOverviewState {
 }
 
 export interface MonthlyOverviewService {
-  getMonthlyOverview: () => Promise<{
+  getMonthlyOverview: (date: Date) => Promise<{
     overview: MonthlyOverview;
     records: DailyRecord[];
   }>;
@@ -36,13 +36,14 @@ function normalizeTechnicalMessage(cause: unknown): string {
 
 export function createMonthlyOverviewRefresher(
   service: MonthlyOverviewService,
-  setState: Dispatch<SetStateAction<UseMonthlyOverviewState>>
+  setState: Dispatch<SetStateAction<UseMonthlyOverviewState>>,
+  month: Date
 ) {
   return async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const data = await service.getMonthlyOverview();
+      const data = await service.getMonthlyOverview(month);
       setState({
         loading: false,
         overview: data.overview,

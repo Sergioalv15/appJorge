@@ -5,15 +5,20 @@ import {
   Text,
   View,
 } from "react-native";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useFocusEffect } from "expo-router";
 import { Screen } from "../../../../ui/components/Screen";
 import { useTheme } from "../../../../core/theme/ThemeProvider";
 import { useMonthlyOverview } from "../hooks/useMonthlyOverview";
 import { createFocusRefreshGuard } from "../hooks/focusRefreshGuard";
 import { KpiCard } from "../components/KpiCard";
+import { MonthSummaryCard } from "../components/MonthSummaryCard";
 import { deriveHomeKpis } from "../home/deriveHomeKpis";
 import { formatCurrency } from "../../../../core/utils/currency";
+import { addMonths, startOfMonth } from "../../../../core/utils/date";
+import { useInvestmentBalance } from "../../investment/presentation/hooks/useInvestmentBalance";
+import { InvestmentBalanceCard } from "../../investment/presentation/components/InvestmentBalanceCard";
+import { LinearGradient } from "expo-linear-gradient";
 
 function formatRecordDate(date: string | null): string {
   if (!date) {
@@ -29,17 +34,48 @@ function formatRecordDate(date: string | null): string {
   });
 }
 
+function formatMonthLabel(date: Date): string {
+  return date
+    .toLocaleDateString("es-ES", {
+      month: "long",
+      year: "numeric",
+    })
+    .replace(/ de /g, " ");
+}
+
+function HeaderDivider() {
+  const { theme } = useTheme();
+  const transparent = "rgba(0,0,0,0)";
+  const edgeColor = theme.isDark ? theme.colors.white : theme.colors.black;
+
+  return (
+    <LinearGradient
+      colors={[transparent, edgeColor, transparent]}
+      locations={[0, 0.5, 1]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.headerDivider}
+    />
+  );
+}
+
 export function HomeScreen() {
   const { theme } = useTheme();
-  const { loading, error, overview, records, refresh } = useMonthlyOverview();
+  const overviewMonth = useMemo(() => startOfMonth(new Date()), []);
+  const previousMonth = useMemo(() => addMonths(overviewMonth, -1), [overviewMonth]);
+  const { loading, error, overview, records, refresh } = useMonthlyOverview(overviewMonth);
+  const prev = useMonthlyOverview(previousMonth);
+  const investmentBalance = useInvestmentBalance();
   const shouldRefreshOnFocus = useRef(createFocusRefreshGuard());
 
   useFocusEffect(
     useCallback(() => {
+      void investmentBalance.refresh();
+
       if (shouldRefreshOnFocus.current()) {
         void refresh();
       }
-    }, [refresh]),
+    }, [refresh, investmentBalance.refresh]),
   );
 
   if (loading) {
@@ -91,8 +127,15 @@ export function HomeScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.primary }]}>Pagina Principal</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>Resumen rapido del mes actual</Text>
+        <HeaderDivider />
+        <View style={styles.titleArea}>
+          <Text style={[styles.title, { color: theme.colors.primary }]}>
+            Resumen del mes
+          </Text>
+          <Text style={[styles.monthLabel, { color: theme.colors.mutedText }]}>
+            {formatMonthLabel(overviewMonth)}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.kpiGrid}>
@@ -102,7 +145,7 @@ export function HomeScreen() {
           hint={`Ultimo registro: ${formatRecordDate(kpis.lastRecordDate)}`}
         />
         <KpiCard
-          label="Ultima inversion"
+          label="Ultimo destinado a inversion"
           value={formatCurrency(kpis.ultimaInversion)}
         />
         <KpiCard
@@ -115,37 +158,55 @@ export function HomeScreen() {
         />
       </View>
 
-      <View
-        style={[
-          styles.noteCard,
-          {
-            backgroundColor: theme.colors.card,
-            borderRadius: theme.radius.md,
-            borderColor: theme.colors.border,
-            padding: theme.spacing.sm,
-          },
-        ]}
-      >
-        <Text style={[styles.noteTitle, { color: theme.colors.text }]}>Entrada diaria</Text>
-        <Text style={[styles.noteText, { color: theme.colors.mutedText }]}>
-          Usa Calendario desde el drawer para seleccionar un dia y abrir el
-          formulario.
-        </Text>
-      </View>
+      <HeaderDivider />
+
+      {prev.loading ? (
+        <View style={styles.prevLoading}>
+          <ActivityIndicator color={theme.colors.primary} />
+        </View>
+      ) : prev.overview ? (
+        <MonthSummaryCard
+          monthly={{ month: previousMonth, overview: prev.overview }}
+        />
+      ) : null}
+
+      <HeaderDivider />
+
+      <InvestmentBalanceCard
+        available={investmentBalance.available}
+        adjustmentsTotal={investmentBalance.adjustmentsTotal}
+        investedTotal={investmentBalance.investedTotal}
+        loading={investmentBalance.loading}
+        adding={investmentBalance.adding}
+        error={investmentBalance.error ?? investmentBalance.addError}
+        onAddAdjustment={investmentBalance.addAdjustment}
+        onRefresh={() => void investmentBalance.refresh()}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
+    gap: 6,
+  },
+  headerDivider: {
+    width: "100%",
+    height: 1,
+  },
+  titleArea: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
     gap: 2,
   },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "800",
   },
-  subtitle: {
+  monthLabel: {
     fontSize: 14,
+    textTransform: "capitalize",
   },
   kpiGrid: {
     flexDirection: "row",
@@ -153,17 +214,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     rowGap: 10,
   },
-  noteCard: {
-    borderWidth: 1,
-    gap: 4,
-  },
-  noteTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  noteText: {
-    fontSize: 13,
-    lineHeight: 18,
+  prevLoading: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
   },
   center: {
     alignItems: "center",

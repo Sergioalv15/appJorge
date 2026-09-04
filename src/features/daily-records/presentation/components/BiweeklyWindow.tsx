@@ -1,14 +1,20 @@
 import { Link } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { biweekWindowDays, parseIsoDate } from "../../../../core/utils/date";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  biweekWindowDays,
+  isIsoTodayLocal,
+  parseIsoDate,
+} from "../../../../core/utils/date";
 import { useTheme } from "../../../../core/theme/ThemeProvider";
 import { DailyRecord } from "../../domain/types";
+import { computeDailyProfit } from "../../domain/calculators";
+import { formatCurrency } from "../../../../core/utils/currency";
 import {
   buildBiweeklyRangeAnnouncement,
   buildDayAccessibilityHint,
   buildDayAccessibilityLabel,
 } from "../calendar/calendarA11y";
-import { DayCellStatus, deriveDayCellStatus } from "../calendar/dayCellStatus";
+import { deriveDayCellStatus } from "../calendar/dayCellStatus";
 import { buildDayRouteFromIso } from "../calendar/dayRoute";
 
 interface Props {
@@ -45,6 +51,8 @@ function dayNumber(iso: string): string {
   return String(parseIsoDate(iso).getDate());
 }
 
+const WEEK_COLUMN_COUNT = 7;
+
 export function BiweeklyWindow({
   windowStartIso,
   selectedIso,
@@ -57,6 +65,122 @@ export function BiweeklyWindow({
   const { theme } = useTheme();
   const windowDays = biweekWindowDays(windowStartIso);
   const windowEndIso = windowDays[windowDays.length - 1];
+  const weekOneDays = windowDays.slice(0, WEEK_COLUMN_COUNT);
+  const weekTwoDays = windowDays.slice(WEEK_COLUMN_COUNT);
+
+  const renderWeek = (days: string[]) => (
+    <View style={styles.weekGrid}>
+      {days.map((iso) => {
+        const record = recordsByIso.get(iso);
+        const status = deriveDayCellStatus(record);
+        const isSelected = selectedIso === iso;
+        const isToday = isIsoTodayLocal(iso);
+        const profit = record ? computeDailyProfit(record) : null;
+
+        return (
+          <View style={styles.dayColumn} key={iso}>
+            <Text
+              style={[
+                styles.weekday,
+                isToday ? styles.todayWeekday : null,
+                { color: theme.colors.mutedText },
+              ]}
+            >
+              {weekdayLabel(iso)}
+            </Text>
+            <Link href={buildDayRouteFromIso(iso)} asChild>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={buildDayAccessibilityLabel(
+                  iso,
+                  status,
+                  isSelected,
+                )}
+                accessibilityHint={buildDayAccessibilityHint(status)}
+                onPress={() => onSelectDay(iso)}
+                style={[
+                  styles.dayNumberBadge,
+                  {
+                    borderRadius: theme.radius.md,
+                    borderColor: isSelected
+                      ? theme.colors.primary
+                      : theme.colors.border,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.dayNumberCircle,
+                    isToday
+                      ? {
+                          backgroundColor: theme.isDark
+                            ? theme.colors.white
+                            : theme.colors.black,
+                        }
+                      : null,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.dayNumber,
+                      isToday
+                        ? {
+                            color: theme.isDark
+                              ? theme.colors.black
+                              : theme.colors.white,
+                            fontWeight: "700",
+                          }
+                        : { color: theme.colors.text },
+                    ]}
+                  >
+                    {dayNumber(iso)}
+                  </Text>
+                </View>
+              </Pressable>
+            </Link>
+            {record && profit && (
+              <View style={styles.daySummary}>
+                <View style={styles.summaryMetric}>
+                  <Text
+                    style={[
+                      styles.summaryLabel,
+                      { color: theme.colors.mutedText },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    Venta
+                  </Text>
+                  <Text
+                    style={[styles.summaryValue, { color: theme.colors.text }]}
+                    numberOfLines={1}
+                  >
+                    {formatCurrency(record.totalSold)}
+                  </Text>
+                </View>
+                <View style={styles.summaryMetric}>
+                  <Text
+                    style={[
+                      styles.summaryLabel,
+                      { color: theme.colors.mutedText },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    Neto
+                  </Text>
+                  <Text
+                    style={[styles.summaryValue, { color: theme.colors.success }]}
+                    numberOfLines={1}
+                  >
+                    {formatCurrency(profit.netProfit)}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        );
+      })}
+    </View>
+  );
 
   return (
     <View
@@ -126,70 +250,23 @@ export function BiweeklyWindow({
         </Pressable>
       </View>
 
-      <View style={styles.grid}>
-        {windowDays.map((iso) => {
-          const status = deriveDayCellStatus(recordsByIso.get(iso));
-          const isSelected = selectedIso === iso;
-
-          return (
-            <Link href={buildDayRouteFromIso(iso)} asChild key={iso}>
-              <Pressable
-                style={[
-                    styles.cell,
-                    status === "filled" ? styles.cellFilled : styles.cellEmpty,
-                    isSelected ? styles.cellSelected : null,
-                    {
-                      borderRadius: theme.radius.md,
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.inputBackground,
-                      padding: theme.spacing.xs,
-                    },
-                    status === 'filled'
-                      ? {
-                          borderColor: theme.colors.primarySoft,
-                          backgroundColor: theme.colors.card,
-                        }
-                      : null,
-                    isSelected
-                      ? {
-                          borderColor: theme.colors.primary,
-                          borderWidth: 2,
-                        }
-                      : null,
-                  ]}
-                onPress={() => onSelectDay(iso)}
-                accessibilityRole="button"
-                accessibilityLabel={buildDayAccessibilityLabel(
-                  iso,
-                  status,
-                  isSelected,
-                )}
-                accessibilityHint={buildDayAccessibilityHint(status)}
-              >
-                <Text style={[styles.weekday, { color: theme.colors.mutedText }]}>{weekdayLabel(iso)}</Text>
-                <Text style={[styles.dayNumber, { color: theme.colors.text }]}>{dayNumber(iso)}</Text>
-                <StatusPill status={status} />
-              </Pressable>
-            </Link>
-          );
-        })}
-      </View>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.grid}>
+          {renderWeek(weekOneDays)}
+          {renderWeek(weekTwoDays)}
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-function StatusPill({ status }: { status: DayCellStatus }) {
-  const { theme } = useTheme();
-
-  if (status === "filled") {
-    return <Text style={[styles.filledLabel, { color: theme.colors.success }]}>Con registro</Text>;
-  }
-
-  return <Text style={[styles.emptyLabel, { color: theme.colors.mutedText }]}>Sin registro</Text>;
-}
-
 const styles = StyleSheet.create({
   wrapper: {
+    flex: 1,
     borderWidth: 1,
   },
   header: {
@@ -212,7 +289,7 @@ const styles = StyleSheet.create({
   controlButton: {
     flex: 1,
     borderWidth: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 10,
     alignItems: "center",
   },
@@ -220,32 +297,71 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 12,
   },
+  scrollArea: {
+    flex: 1,
+  },
+  listContent: {
+    flexGrow: 1,
+    gap: 10,
+    paddingBottom: 4,
+  },
   grid: {
+    flex: 1,
+    gap: 10,
+  },
+  weekGrid: {
+    flex: 1,
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: 6,
   },
-  cell: {
-    width: "31.5%",
-    borderWidth: 1,
-    gap: 2,
+  dayColumn: {
+    flex: 1,
+    alignItems: "center",
+    gap: 6,
   },
-  cellFilled: {},
-  cellEmpty: {},
-  cellSelected: {},
   weekday: {
-    fontSize: 11,
+    fontSize: 12,
     textTransform: "capitalize",
   },
-  dayNumber: {
-    fontSize: 18,
+  todayWeekday: {
     fontWeight: "700",
   },
-  filledLabel: {
-    fontSize: 11,
-    fontWeight: "600",
+  dayNumberBadge: {
+    width: "100%",
+    flex: 1,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
-  emptyLabel: {
-    fontSize: 11,
+  dayNumberCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayNumber: {
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  daySummary: {
+    width: "100%",
+    gap: 2,
+  },
+  summaryMetric: {
+    alignItems: "center",
+  },
+  summaryLabel: {
+    fontSize: 9,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    opacity: 0.8,
+  },
+  summaryValue: {
+    fontSize: 9,
+    fontWeight: "700",
+    width: "100%",
+    textAlign: "center",
   },
 });

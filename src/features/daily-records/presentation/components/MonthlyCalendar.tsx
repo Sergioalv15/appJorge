@@ -10,9 +10,7 @@ import { isSameMonth } from "../../../../core/utils/date";
 import { useTheme } from "../../../../core/theme/ThemeProvider";
 import {
   buildMonthLabel,
-  buildMonthStateCopy,
   buildMonthlyCalendarWeeks,
-  countMonthRecords,
   MONTHLY_CALENDAR_COLUMN_COUNT,
   MONTHLY_CELL_MIN_HEIGHT,
   WEEKDAY_LABELS_MONDAY_FIRST,
@@ -51,7 +49,6 @@ export function MonthlyCalendar({
 }: Props) {
   const { theme } = useTheme();
   const weeks = buildMonthlyCalendarWeeks(visibleMonth, recordsByIso);
-  const monthRecords = countMonthRecords(visibleMonth, recordsByIso);
   const monthLabel = buildMonthLabel(visibleMonth);
   const isShowingCurrentMonth = isSameMonth(visibleMonth, new Date());
 
@@ -88,12 +85,6 @@ export function MonthlyCalendar({
             numberOfLines={1}
           >
             {monthLabel}
-          </Text>
-          <Text
-            style={[styles.subtitle, { color: theme.colors.calendarMutedText }]}
-            numberOfLines={1}
-          >
-            {buildMonthStateCopy(visibleMonth, monthRecords)}
           </Text>
         </View>
 
@@ -424,9 +415,6 @@ const styles = StyleSheet.create({
     fontSize: 44,
     letterSpacing: 5,
     fontWeight: "900",
-  },
-  subtitle: {
-    fontSize: 12,
   },
   statusRow: {
     minHeight: 32,

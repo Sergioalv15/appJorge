@@ -10,8 +10,8 @@ function createRecord(date: string) {
   return {
     date,
     totalSold: 100,
-    investmentCost: 40,
     additionalExpenses: 10,
+    profitPercent: 0.3,
     notes: "record",
   };
 }

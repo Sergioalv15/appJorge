@@ -49,10 +49,11 @@ describe('createMonthlyOverviewRefresher', () => {
       {
         getMonthlyOverview: async () => ({
           overview: createOverview('2026-07'),
-          records: [{ date: '2026-07-01', totalSold: 100, investmentCost: 40, additionalExpenses: 10, notes: '' }],
+          records: [{ date: '2026-07-01', totalSold: 100, additionalExpenses: 10, profitPercent: 0.3, notes: '' }],
         }),
       },
-      stateHarness.setState
+      stateHarness.setState,
+      new Date(2026, 6, 1)
     );
 
     await refresher();
@@ -60,7 +61,7 @@ describe('createMonthlyOverviewRefresher', () => {
     expect(stateHarness.getState()).toEqual({
       loading: false,
       overview: createOverview('2026-07'),
-      records: [{ date: '2026-07-01', totalSold: 100, investmentCost: 40, additionalExpenses: 10, notes: '' }],
+      records: [{ date: '2026-07-01', totalSold: 100, additionalExpenses: 10, profitPercent: 0.3, notes: '' }],
       error: null,
     });
   });
@@ -69,7 +70,7 @@ describe('createMonthlyOverviewRefresher', () => {
     const stateHarness = createStateHarness({
       loading: false,
       overview: createOverview('2026-07'),
-      records: [{ date: '2026-07-01', totalSold: 100, investmentCost: 40, additionalExpenses: 10, notes: '' }],
+      records: [{ date: '2026-07-01', totalSold: 100, additionalExpenses: 10, profitPercent: 0.3, notes: '' }],
       error: null,
     });
 
@@ -79,7 +80,8 @@ describe('createMonthlyOverviewRefresher', () => {
           throw new Error('sqlite locked');
         },
       },
-      stateHarness.setState
+      stateHarness.setState,
+      new Date(2026, 6, 1)
     );
 
     await refresher();
@@ -87,7 +89,7 @@ describe('createMonthlyOverviewRefresher', () => {
     expect(stateHarness.getState()).toEqual({
       loading: false,
       overview: createOverview('2026-07'),
-      records: [{ date: '2026-07-01', totalSold: 100, investmentCost: 40, additionalExpenses: 10, notes: '' }],
+      records: [{ date: '2026-07-01', totalSold: 100, additionalExpenses: 10, profitPercent: 0.3, notes: '' }],
       error: {
         userMessage: 'No se pudo cargar el inicio.',
         technicalMessage: 'sqlite locked',

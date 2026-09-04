@@ -22,7 +22,10 @@
     },
     "ios": {
       "bundleIdentifier": "com.appjorge.mobile",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "extra": {
       "router": {},

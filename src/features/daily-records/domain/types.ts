@@ -1,14 +1,15 @@
 export interface DailyRecord {
   date: string;
   totalSold: number;
-  investmentCost: number;
   additionalExpenses: number;
+  profitPercent: number;
   notes: string;
 }
 
 export interface DailyProfit {
   grossProfit: number;
   netProfit: number;
+  investment: number;
 }
 
 export interface MonthlyOverview {

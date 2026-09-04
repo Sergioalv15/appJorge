@@ -36,18 +36,20 @@ export function DailyRecordScreen() {
       <DailyRecordForm
         date={date}
         totalSold={state.totalSold}
-        investmentCost={state.investmentCost}
         additionalExpenses={state.additionalExpenses}
+        profitPercent={state.profitPercent}
         notes={state.notes}
         grossProfit={state.previewProfit.grossProfit}
         netProfit={state.previewProfit.netProfit}
+        investment={state.previewProfit.investment}
         saving={state.saving}
         error={state.error}
         notice={state.notice}
         onTotalSoldChange={state.setTotalSold}
-        onInvestmentCostChange={state.setInvestmentCost}
         onAdditionalExpensesChange={state.setAdditionalExpenses}
+        onProfitPercentChange={state.setProfitPercent}
         onNotesChange={state.setNotes}
+        onNoticeHide={() => state.setNotice(null)}
         onSave={state.save}
       />
     </Screen>

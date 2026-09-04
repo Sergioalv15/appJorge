@@ -12,8 +12,8 @@ export function useDailyRecord(date: string) {
   const [notice, setNotice] = useState<string | null>(null);
 
   const [totalSold, setTotalSold] = useState('');
-  const [investmentCost, setInvestmentCost] = useState('');
   const [additionalExpenses, setAdditionalExpenses] = useState('');
+  const [profitPercent, setProfitPercent] = useState('30');
   const [notes, setNotes] = useState('');
 
   const load = useCallback(async () => {
@@ -25,13 +25,13 @@ export function useDailyRecord(date: string) {
 
       if (result.record) {
         setTotalSold(String(result.record.totalSold));
-        setInvestmentCost(String(result.record.investmentCost));
         setAdditionalExpenses(String(result.record.additionalExpenses));
+        setProfitPercent(String(Math.round(result.record.profitPercent * 100)));
         setNotes(result.record.notes);
       } else {
         setTotalSold('');
-        setInvestmentCost('');
         setAdditionalExpenses('');
+        setProfitPercent('30');
         setNotes('');
       }
     } catch {
@@ -45,15 +45,17 @@ export function useDailyRecord(date: string) {
     void load();
   }, [load]);
 
-  const previewProfit = useMemo(() => {
-    const parse = (value: string) => Number(value.replace(',', '.')) || 0;
+  const parse = useCallback((value: string) => Number(value.replace(',', '.')) || 0, []);
 
-    return computeDailyProfit({
-      totalSold: parse(totalSold),
-      investmentCost: parse(investmentCost),
-      additionalExpenses: parse(additionalExpenses),
-    });
-  }, [additionalExpenses, investmentCost, totalSold]);
+  const previewProfit = useMemo(
+    () =>
+      computeDailyProfit({
+        totalSold: parse(totalSold),
+        profitPercent: (parse(profitPercent) / 100 || 0),
+        additionalExpenses: parse(additionalExpenses),
+      }),
+    [additionalExpenses, parse, profitPercent, totalSold],
+  );
 
   const save = useCallback(async () => {
     setSaving(true);
@@ -64,13 +66,13 @@ export function useDailyRecord(date: string) {
       const result = await dailyRecordService.saveFromForm({
         date,
         totalSold,
-        investmentCost,
         additionalExpenses,
+        profitPercent,
         notes,
       });
 
       setRecord(result.record);
-      setNotice('Saved');
+      setNotice('el registro del día se ha guardado');
     } catch (e) {
       if (e instanceof ValidationError) {
         setError(e.message);
@@ -80,7 +82,7 @@ export function useDailyRecord(date: string) {
     } finally {
       setSaving(false);
     }
-  }, [additionalExpenses, date, investmentCost, notes, totalSold]);
+  }, [additionalExpenses, date, notes, profitPercent, totalSold]);
 
   return {
     loading,
@@ -89,13 +91,14 @@ export function useDailyRecord(date: string) {
     notice,
     record,
     totalSold,
-    investmentCost,
     additionalExpenses,
+    profitPercent,
     notes,
     setTotalSold,
-    setInvestmentCost,
     setAdditionalExpenses,
+    setProfitPercent,
     setNotes,
+    setNotice,
     save,
     previewProfit,
   };

@@ -5,8 +5,8 @@ import { DailyRecord } from '../domain/types';
 type DailyRecordRow = {
   date: string;
   total_sold: number;
-  investment_cost: number;
   additional_expenses: number;
+  profit_percent: number;
   notes: string;
 };
 
@@ -14,8 +14,8 @@ function mapRow(row: DailyRecordRow): DailyRecord {
   return {
     date: row.date,
     totalSold: row.total_sold,
-    investmentCost: row.investment_cost,
     additionalExpenses: row.additional_expenses,
+    profitPercent: row.profit_percent,
     notes: row.notes,
   };
 }
@@ -25,21 +25,26 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
     await initializeDatabase();
     const db = await getDb();
 
+    const investment = Math.round(record.totalSold * (1 - record.profitPercent) * 100) / 100;
+
     await db.runAsync(
       `
-      INSERT INTO daily_records (date, total_sold, investment_cost, additional_expenses, notes)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO daily_records (date, total_sold, investment_cost, additional_expenses, profit_percent, net_profit, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(date) DO UPDATE SET
         total_sold = excluded.total_sold,
         investment_cost = excluded.investment_cost,
         additional_expenses = excluded.additional_expenses,
+        profit_percent = excluded.profit_percent,
         notes = excluded.notes
       `,
       [
         record.date,
         record.totalSold,
-        record.investmentCost,
+        investment,
         record.additionalExpenses,
+        record.profitPercent,
+        0,
         record.notes,
       ]
     );
@@ -49,7 +54,7 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
     await initializeDatabase();
     const db = await getDb();
     const row = await db.getFirstAsync<DailyRecordRow>(
-      `SELECT date, total_sold, investment_cost, additional_expenses, notes FROM daily_records WHERE date = ?`,
+      `SELECT date, total_sold, additional_expenses, profit_percent, notes FROM daily_records WHERE date = ?`,
       [date]
     );
 
@@ -62,7 +67,7 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
 
     const rows = await db.getAllAsync<DailyRecordRow>(
       `
-      SELECT date, total_sold, investment_cost, additional_expenses, notes
+      SELECT date, total_sold, additional_expenses, profit_percent, notes
       FROM daily_records
       WHERE substr(date, 1, 7) = ?
       ORDER BY date ASC
@@ -71,5 +76,16 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
     );
 
     return rows.map(mapRow);
+  }
+
+  async sumInvestmentCost(): Promise<number> {
+    await initializeDatabase();
+    const db = await getDb();
+
+    const rows = await db.getAllAsync<{ total_sold: number; profit_percent: number }>(
+      `SELECT total_sold, profit_percent FROM daily_records`
+    );
+
+    return rows.reduce((sum, row) => sum + row.total_sold * (1 - row.profit_percent), 0);
   }
 }

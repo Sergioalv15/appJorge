@@ -30,6 +30,13 @@ export default function DrawerLayout() {
           ...createCalendarDrawerScreenOptions(theme),
         }}
       />
+      <Drawer.Screen
+        name="annual"
+        options={{
+          title: drawerRouteLabels.annual,
+          drawerLabel: drawerRouteLabels.annual,
+        }}
+      />
     </Drawer>
   );
 }

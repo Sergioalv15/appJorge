@@ -3,7 +3,6 @@ import {
   buildMonthLabel,
   buildMonthlyCalendarCells,
   buildMonthlyCalendarWeeks,
-  buildMonthStateCopy,
   chunkWeeks,
   countMonthRecords,
   deriveCellEconomicSignal,
@@ -21,13 +20,13 @@ describe("monthlyCalendarModel", () => {
 
   it("builds cells with record/no-record distinction and adjacent month days", () => {
     const records = new Map([
-      [
+[
         "2026-11-01",
         {
           date: "2026-11-01",
           totalSold: 120,
-          investmentCost: 50,
           additionalExpenses: 10,
+          profitPercent: 0.3,
           notes: "ok",
         },
       ],
@@ -70,8 +69,8 @@ describe("monthlyCalendarModel", () => {
         {
           date: "2026-11-01",
           totalSold: 100,
-          investmentCost: 50,
           additionalExpenses: 5,
+          profitPercent: 0.3,
           notes: "in",
         },
       ],
@@ -80,8 +79,8 @@ describe("monthlyCalendarModel", () => {
         {
           date: "2026-10-31",
           totalSold: 100,
-          investmentCost: 50,
           additionalExpenses: 5,
+          profitPercent: 0.3,
           notes: "out",
         },
       ],
@@ -90,12 +89,8 @@ describe("monthlyCalendarModel", () => {
     expect(countMonthRecords(new Date(2026, 10, 1), records)).toBe(1);
   });
 
-  it("builds dominant uppercase month abbreviation label and empty/filled copy", () => {
+  it("builds dominant uppercase month abbreviation label", () => {
     expect(buildMonthLabel(new Date(2026, 7, 1))).toBe("AGO");
-    expect(buildMonthStateCopy(new Date(2026, 10, 1), 0)).toBe(
-      "Este mes no tiene registros todavía.",
-    );
-    expect(buildMonthStateCopy(new Date(2026, 10, 1), 2)).toBe("2/30 días con registro");
   });
 
   it("derives compact economic signal only for current-month records", () => {
@@ -103,8 +98,8 @@ describe("monthlyCalendarModel", () => {
       {
         date: "2026-11-03",
         totalSold: 160,
-        investmentCost: 100,
         additionalExpenses: 10,
+        profitPercent: 0.3,
         notes: "positive",
       },
       true,
@@ -113,8 +108,8 @@ describe("monthlyCalendarModel", () => {
       {
         date: "2026-11-04",
         totalSold: 80,
-        investmentCost: 100,
-        additionalExpenses: 10,
+        additionalExpenses: 40,
+        profitPercent: 0.3,
         notes: "negative",
       },
       true,
@@ -123,8 +118,8 @@ describe("monthlyCalendarModel", () => {
       {
         date: "2026-11-05",
         totalSold: 100,
-        investmentCost: 100,
-        additionalExpenses: 0,
+        additionalExpenses: 30,
+        profitPercent: 0.3,
         notes: "neutral",
       },
       true,
@@ -133,8 +128,8 @@ describe("monthlyCalendarModel", () => {
       {
         date: "2026-10-31",
         totalSold: 120,
-        investmentCost: 100,
         additionalExpenses: 0,
+        profitPercent: 0.3,
         notes: "adjacent",
       },
       false,
@@ -158,8 +153,8 @@ describe("monthlyCalendarModel", () => {
         {
           date: "2026-11-01",
           totalSold: 100,
-          investmentCost: 120,
-          additionalExpenses: 5,
+          additionalExpenses: 40,
+          profitPercent: 0.3,
           notes: "in-month",
         },
       ],
@@ -168,8 +163,8 @@ describe("monthlyCalendarModel", () => {
         {
           date: "2026-10-31",
           totalSold: 180,
-          investmentCost: 120,
           additionalExpenses: 20,
+          profitPercent: 0.3,
           notes: "adjacent",
         },
       ],

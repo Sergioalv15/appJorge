@@ -36,10 +36,10 @@ describe("biweekly date helpers", () => {
     expect(monthKeysForWindow("2026-02-01")).toEqual(["2026-02"]);
   });
 
-  it("anchors initial window so today is visible", () => {
+  it("anchors initial window to the Monday of the week containing today", () => {
     const startIso = initialBiweekStart(new Date(2026, 1, 10));
 
-    expect(startIso).toBe("2026-02-04");
+    expect(startIso).toBe("2026-02-09");
     expect(biweekWindowDays(startIso)).toContain("2026-02-10");
   });
 });

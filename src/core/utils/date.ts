@@ -105,7 +105,13 @@ export function prevBiweekStart(iso: string): string {
 }
 
 export function initialBiweekStart(today: Date): string {
-  return toIsoDate(addDays(today, -6));
+  const mondayOffset = weekdayIndexMondayFirst(today);
+  const monday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - mondayOffset,
+  );
+  return toIsoDate(monday);
 }
 
 export function monthKeysForWindow(startIso: string): string[] {

@@ -1,13 +1,22 @@
 import { DailyProfit, DailyRecord, MonthlyOverview } from './types';
 
-export function computeDailyProfit(input: Pick<DailyRecord, 'totalSold' | 'investmentCost' | 'additionalExpenses'>): DailyProfit {
-  const grossProfit = input.totalSold;
-  const netProfit = grossProfit - input.investmentCost - input.additionalExpenses;
+const DEFAULT_PROFIT_PERCENT = 0.3;
+
+export function computeDailyProfit(
+  input: Pick<DailyRecord, 'totalSold' | 'profitPercent' | 'additionalExpenses'>
+): DailyProfit {
+  const netProfit = Math.max(0, round2(input.totalSold * input.profitPercent) - input.additionalExpenses);
+  const investment = round2(input.totalSold * (1 - input.profitPercent));
 
   return {
-    grossProfit,
+    grossProfit: input.totalSold,
     netProfit,
+    investment,
   };
+}
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 export function computeMonthlyOverview(month: string, records: DailyRecord[]): MonthlyOverview {
@@ -15,10 +24,10 @@ export function computeMonthlyOverview(month: string, records: DailyRecord[]): M
     (acc, record) => {
       const profit = computeDailyProfit(record);
       acc.totalSold += record.totalSold;
-      acc.totalInvested += record.investmentCost;
       acc.totalAdditionalExpenses += record.additionalExpenses;
       acc.grossProfit += profit.grossProfit;
       acc.netProfit += profit.netProfit;
+      acc.totalInvested += profit.investment;
       return acc;
     },
     {
@@ -32,7 +41,7 @@ export function computeMonthlyOverview(month: string, records: DailyRecord[]): M
 
   const trackedDays = records.length;
   const averageDailyNetProfit = trackedDays > 0 ? totals.netProfit / trackedDays : 0;
-  const estimatedSalary = totals.totalSold * 0.3;
+  const estimatedSalary = totals.totalSold * DEFAULT_PROFIT_PERCENT;
 
   return {
     month,

@@ -31,8 +31,8 @@ describe("monthlyCalendarBoundary", () => {
       {
         date: "2026-11-01",
         totalSold: 200,
-        investmentCost: 120,
         additionalExpenses: 5,
+        profitPercent: 0.3,
         notes: "visible",
       },
     ];
@@ -40,15 +40,15 @@ describe("monthlyCalendarBoundary", () => {
       {
         date: "2026-10-31",
         totalSold: 100,
-        investmentCost: 50,
         additionalExpenses: 10,
+        profitPercent: 0.3,
         notes: "boundary",
       },
       {
         date: "2026-10-15",
         totalSold: 90,
-        investmentCost: 40,
         additionalExpenses: 5,
+        profitPercent: 0.3,
         notes: "not-rendered",
       },
     ];
@@ -70,8 +70,8 @@ describe("monthlyCalendarBoundary", () => {
         {
           date: "2026-11-01",
           totalSold: 100,
-          investmentCost: 90,
           additionalExpenses: 5,
+          profitPercent: 0.3,
           notes: "in",
         },
       ],
@@ -79,8 +79,8 @@ describe("monthlyCalendarBoundary", () => {
         {
           date: "2026-10-31",
           totalSold: 80,
-          investmentCost: 60,
           additionalExpenses: 5,
+          profitPercent: 0.3,
           notes: "boundary",
         },
       ],
@@ -105,8 +105,8 @@ describe("monthlyCalendarBoundary", () => {
           {
             date: "2021-02-14",
             totalSold: 70,
-            investmentCost: 20,
             additionalExpenses: 5,
+            profitPercent: 0.3,
             notes: "visible-only",
           },
         ],
@@ -129,8 +129,8 @@ describe("monthlyCalendarBoundary", () => {
             {
               date: "2026-11-15",
               totalSold: 150,
-              investmentCost: 80,
               additionalExpenses: 10,
+              profitPercent: 0.3,
               notes: "visible",
             },
           ],
@@ -143,15 +143,15 @@ describe("monthlyCalendarBoundary", () => {
             {
               date: "2026-10-31",
               totalSold: 100,
-              investmentCost: 50,
               additionalExpenses: 10,
+              profitPercent: 0.3,
               notes: "prev-boundary",
             },
             {
               date: "2026-10-15",
               totalSold: 100,
-              investmentCost: 50,
               additionalExpenses: 10,
+              profitPercent: 0.3,
               notes: "prev-not-boundary",
             },
           ],
@@ -163,8 +163,8 @@ describe("monthlyCalendarBoundary", () => {
           {
             date: "2026-12-01",
             totalSold: 120,
-            investmentCost: 70,
             additionalExpenses: 10,
+            profitPercent: 0.3,
             notes: "next-boundary",
           },
         ],

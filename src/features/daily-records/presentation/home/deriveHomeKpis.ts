@@ -1,4 +1,5 @@
 import { DailyRecord, MonthlyOverview } from "../../domain/types";
+import { computeDailyProfit } from "../../domain/calculators";
 
 export interface HomeKpis {
   ventasUltimoDia: number;
@@ -26,7 +27,7 @@ export function deriveHomeKpis(
 
   return {
     ventasUltimoDia: latestRecord?.totalSold ?? 0,
-    ultimaInversion: latestRecord?.investmentCost ?? 0,
+    ultimaInversion: latestRecord ? computeDailyProfit(latestRecord).investment : 0,
     beneficioBrutoTotalMes: overview.grossProfit,
     beneficioNetoMesActual: overview.netProfit,
     lastRecordDate: latestRecord?.date ?? null,

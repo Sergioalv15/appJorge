@@ -2,22 +2,25 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ReactNode } from 'react';
 import { formatCurrency } from '../../../../core/utils/currency';
 import { useTheme } from '../../../../core/theme/ThemeProvider';
+import { Toast } from '../../../../ui/components/Toast';
 
 interface Props {
   date: string;
   totalSold: string;
-  investmentCost: string;
   additionalExpenses: string;
+  profitPercent: string;
   notes: string;
   grossProfit: number;
   netProfit: number;
+  investment: number;
   saving: boolean;
   error?: string | null;
   notice?: string | null;
   onTotalSoldChange: (value: string) => void;
-  onInvestmentCostChange: (value: string) => void;
   onAdditionalExpensesChange: (value: string) => void;
+  onProfitPercentChange: (value: string) => void;
   onNotesChange: (value: string) => void;
+  onNoticeHide: () => void;
   onSave: () => void;
 }
 
@@ -64,15 +67,15 @@ export function DailyRecordForm(props: Props) {
         />
       </Field>
 
-      <Field label="Coste inversión (€)" labelId="investment-cost-label">
+      <Field label="Porcentaje de beneficio (%)" labelId="profit-percent-label">
         <TextInput
-          accessibilityLabelledBy="investment-cost-label"
-          accessibilityLabel="Coste de inversión en euros"
-          accessibilityHint="Ingresá el coste de inversión del día"
+          accessibilityLabelledBy="profit-percent-label"
+          accessibilityLabel="Porcentaje de beneficio en tanto por ciento"
+          accessibilityHint="Porcentaje sobre las ventas que se destina a beneficio"
           keyboardType="decimal-pad"
-          value={props.investmentCost}
-          onChangeText={props.onInvestmentCostChange}
-          placeholder="0"
+          value={props.profitPercent}
+          onChangeText={props.onProfitPercentChange}
+          placeholder="30"
           placeholderTextColor={theme.colors.mutedText}
           selectionColor={theme.colors.primary}
           style={[
@@ -86,6 +89,24 @@ export function DailyRecordForm(props: Props) {
             },
           ]}
         />
+      </Field>
+
+      <Field label="Destinar a inversión (€)" labelId="investment-cost-label">
+        <Text
+          nativeID="investment-cost-label"
+          style={[
+            styles.investmentValue,
+            {
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.md,
+              paddingHorizontal: theme.spacing.sm,
+              color: theme.colors.text,
+              backgroundColor: theme.colors.inputBackground,
+            },
+          ]}
+        >
+          {formatCurrency(props.investment)}
+        </Text>
       </Field>
 
       <Field label="Gastos adicionales (€)" labelId="additional-expenses-label">
@@ -150,7 +171,7 @@ export function DailyRecordForm(props: Props) {
       >
         <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>Beneficio bruto</Text>
         <Text style={[styles.profitValue, { color: theme.colors.text }]}>{formatCurrency(props.grossProfit)}</Text>
-        <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>Beneficio neto</Text>
+        <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>Beneficio neto (calculado)</Text>
         <Text style={[styles.profitValue, { color: theme.colors.success }]}>{formatCurrency(props.netProfit)}</Text>
       </View>
 
@@ -163,30 +184,51 @@ export function DailyRecordForm(props: Props) {
           {props.error}
         </Text>
       ) : null}
-      {props.notice ? (
-        <Text accessibilityLiveRegion="polite" style={[styles.notice, { color: theme.colors.success }]}>
-          {props.notice}
-        </Text>
-      ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Guardar registro del día"
-        accessibilityHint="Guarda los valores cargados del día actual"
-        accessibilityState={{ disabled: props.saving, busy: props.saving }}
-        style={[
-          styles.button,
-          {
-            backgroundColor: theme.colors.primary,
-            borderRadius: theme.radius.md,
-          },
-          props.saving && styles.buttonDisabled,
-        ]}
-        disabled={props.saving}
-        onPress={props.onSave}
-      >
-        <Text style={styles.buttonText}>{props.saving ? 'Guardando...' : 'Guardar día'}</Text>
-      </Pressable>
+      {props.notice ? (
+        <View style={styles.saveArea}>
+          <View style={styles.toastOverlay}>
+            <Toast message={props.notice} onHide={props.onNoticeHide} />
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Guardar registro del día"
+            accessibilityHint="Guarda los valores cargados del día actual"
+            accessibilityState={{ disabled: props.saving, busy: props.saving }}
+            style={[
+              styles.button,
+              {
+                backgroundColor: theme.colors.primary,
+                borderRadius: theme.radius.md,
+              },
+              props.saving && styles.buttonDisabled,
+            ]}
+            disabled={props.saving}
+            onPress={props.onSave}
+          >
+            <Text style={styles.buttonText}>{props.saving ? 'Guardando...' : 'Guardar día'}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Guardar registro del día"
+          accessibilityHint="Guarda los valores cargados del día actual"
+          accessibilityState={{ disabled: props.saving, busy: props.saving }}
+          style={[
+            styles.button,
+            {
+              backgroundColor: theme.colors.primary,
+              borderRadius: theme.radius.md,
+            },
+            props.saving && styles.buttonDisabled,
+          ]}
+          disabled={props.saving}
+          onPress={props.onSave}
+        >
+          <Text style={styles.buttonText}>{props.saving ? 'Guardando...' : 'Guardar día'}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -227,6 +269,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
   },
+  investmentValue: {
+    borderWidth: 1,
+    paddingVertical: 11,
+    fontSize: 16,
+    fontWeight: '600',
+  },
   notes: {
     minHeight: 86,
     textAlignVertical: 'top',
@@ -253,6 +301,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 16,
+  },
+  saveArea: {
+    position: 'relative',
+  },
+  toastOverlay: {
+    position: 'absolute',
+    top: -52,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    alignItems: 'center',
   },
   error: {
     fontSize: 13,

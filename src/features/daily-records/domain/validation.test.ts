@@ -7,16 +7,16 @@ describe('validateAndNormalizeDailyRecord', () => {
     const result = validateAndNormalizeDailyRecord({
       date: '2026-07-10',
       totalSold: 200.129,
-      investmentCost: 110.125,
       additionalExpenses: 12.999,
+      profitPercent: 0.3,
       notes: '  done  ',
     });
 
     expect(result).toEqual({
       date: '2026-07-10',
       totalSold: 200.13,
-      investmentCost: 110.13,
       additionalExpenses: 13,
+      profitPercent: 0.3,
       notes: 'done',
     });
   });
@@ -25,8 +25,9 @@ describe('validateAndNormalizeDailyRecord', () => {
     const result = validateAndNormalizeDailyRecord({
       date: '2026-07-10',
       totalSold: 0,
-      investmentCost: 0,
       additionalExpenses: 0,
+      profitPercent: 0.3,
+      
     });
 
     expect(result.notes).toBe('');
@@ -37,8 +38,9 @@ describe('validateAndNormalizeDailyRecord', () => {
       validateAndNormalizeDailyRecord({
         date: '10-07-2026',
         totalSold: 10,
-        investmentCost: 4,
         additionalExpenses: 1,
+        profitPercent: 0.3,
+        
       })
     ).toThrowError(new ValidationError('date must use YYYY-MM-DD format'));
   });
@@ -48,8 +50,9 @@ describe('validateAndNormalizeDailyRecord', () => {
       validateAndNormalizeDailyRecord({
         date: '2026-07-10',
         totalSold: -1,
-        investmentCost: 0,
         additionalExpenses: 0,
+        profitPercent: 0.3,
+        
       })
     ).toThrowError(new ValidationError('totalSold cannot be negative'));
   });
@@ -59,19 +62,11 @@ describe('validateAndNormalizeDailyRecord', () => {
       validateAndNormalizeDailyRecord({
         date: '2026-07-10',
         totalSold: Number.NaN,
-        investmentCost: 0,
         additionalExpenses: 0,
+        profitPercent: 0.3,
+        
       })
     ).toThrowError(new ValidationError('totalSold must be a valid number'));
-
-    expect(() =>
-      validateAndNormalizeDailyRecord({
-        date: '2026-07-10',
-        totalSold: 1,
-        investmentCost: Number.POSITIVE_INFINITY,
-        additionalExpenses: 0,
-      })
-    ).toThrowError(new ValidationError('investmentCost must be a valid number'));
   });
 
   it('rejects notes above 300 chars', () => {
@@ -79,10 +74,23 @@ describe('validateAndNormalizeDailyRecord', () => {
       validateAndNormalizeDailyRecord({
         date: '2026-07-10',
         totalSold: 1,
-        investmentCost: 1,
         additionalExpenses: 1,
+        profitPercent: 0.3,
+        
         notes: 'a'.repeat(301),
       })
     ).toThrowError(new ValidationError('notes cannot be longer than 300 characters'));
+  });
+
+  it('rejects profit percent outside 0-1 range', () => {
+    expect(() =>
+      validateAndNormalizeDailyRecord({
+        date: '2026-07-10',
+        totalSold: 10,
+        additionalExpenses: 1,
+        profitPercent: 1.5,
+        
+      })
+    ).toThrowError(new ValidationError('profitPercent must be between 0 and 1'));
   });
 });

@@ -62,12 +62,14 @@ export function deriveCellEconomicSignal(
     return "none";
   }
 
+  const isLossDay = record.additionalExpenses > record.totalSold * record.profitPercent;
+  if (isLossDay) {
+    return "negative";
+  }
+
   const { netProfit } = computeDailyProfit(record);
   if (netProfit > 0) {
     return "positive";
-  }
-  if (netProfit < 0) {
-    return "negative";
   }
 
   return "neutral";
@@ -126,12 +128,4 @@ export function countMonthRecords(
   }
 
   return total;
-}
-
-export function buildMonthStateCopy(visibleMonth: Date, monthRecords: number): string {
-  if (monthRecords === 0) {
-    return "Este mes no tiene registros todavía.";
-  }
-
-  return `${monthRecords}/${daysInMonthCount(visibleMonth)} días con registro`;
 }

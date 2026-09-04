@@ -19,6 +19,13 @@ class InMemoryDailyRecordRepository implements DailyRecordRepository {
       .filter((item) => item.date.startsWith(month))
       .sort((a, b) => a.date.localeCompare(b.date));
   }
+
+  async sumInvestmentCost(): Promise<number> {
+    return [...this.map.values()].reduce(
+      (sum, item) => sum + item.totalSold * (1 - item.profitPercent),
+      0
+    );
+  }
 }
 
 describe('DailyRecordService', () => {
@@ -29,21 +36,22 @@ describe('DailyRecordService', () => {
     const result = await service.saveFromForm({
       date: '2026-07-12',
       totalSold: '230,50',
-      investmentCost: '100,10',
       additionalExpenses: '10,2',
+      profitPercent: '30',
       notes: '  market day ',
     });
 
     expect(result.record).toEqual({
       date: '2026-07-12',
       totalSold: 230.5,
-      investmentCost: 100.1,
       additionalExpenses: 10.2,
+      profitPercent: 0.3,
       notes: 'market day',
     });
     expect(result.profit).toEqual({
       grossProfit: 230.5,
-      netProfit: 120.2,
+      netProfit: 58.95,
+      investment: 161.35,
     });
   });
 
@@ -53,7 +61,7 @@ describe('DailyRecordService', () => {
     const result = await service.getDailyRecord('2026-07-13');
 
     expect(result.record).toBeNull();
-    expect(result.profit).toEqual({ grossProfit: 0, netProfit: 0 });
+    expect(result.profit).toEqual({ grossProfit: 0, netProfit: 0, investment: 0 });
   });
 
   it('builds monthly overview from persisted records', async () => {
@@ -63,15 +71,15 @@ describe('DailyRecordService', () => {
     await service.saveFromForm({
       date: '2026-07-01',
       totalSold: '100',
-      investmentCost: '40',
       additionalExpenses: '10',
+      profitPercent: '30',
       notes: '',
     });
     await service.saveFromForm({
       date: '2026-07-02',
       totalSold: '300',
-      investmentCost: '150',
       additionalExpenses: '20',
+      profitPercent: '30',
       notes: '',
     });
 
@@ -80,7 +88,9 @@ describe('DailyRecordService', () => {
     expect(result.overview.month).toBe('2026-07');
     expect(result.records).toHaveLength(2);
     expect(result.overview.totalSold).toBe(400);
+    expect(result.overview.totalInvested).toBe(280);
+    expect(result.overview.totalAdditionalExpenses).toBe(30);
     expect(result.overview.grossProfit).toBe(400);
-    expect(result.overview.netProfit).toBe(180);
+    expect(result.overview.netProfit).toBe(90);
   });
 });

@@ -34,7 +34,7 @@ describe("biweeklyWindowReducer", () => {
     });
 
     expect(selected.selectedIso).toBe("2026-02-11");
-    expect(reset.windowStartIso).toBe("2026-02-24");
+    expect(reset.windowStartIso).toBe("2026-03-02");
     expect(reset.selectedIso).toBe("2026-03-02");
   });
 });
@@ -46,8 +46,8 @@ describe("deriveDayCellStatus", () => {
       deriveDayCellStatus({
         date: "2026-02-10",
         totalSold: 100,
-        investmentCost: 40,
         additionalExpenses: 10,
+        profitPercent: 0.3,
         notes: "ok",
       }),
     ).toBe("filled");

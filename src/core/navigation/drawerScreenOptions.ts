@@ -3,6 +3,7 @@ import { AppTheme, Theme } from '../../ui/theme';
 export const drawerRouteLabels = {
   index: 'Pagina Principal',
   calendar: 'Calendario',
+  annual: 'Resumen anual',
 } as const;
 
 export function createDrawerScreenOptions(theme: AppTheme = Theme) {

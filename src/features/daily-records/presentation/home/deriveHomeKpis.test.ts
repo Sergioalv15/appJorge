@@ -28,29 +28,29 @@ describe("deriveHomeKpis", () => {
       {
         date: "2026-08-01",
         totalSold: 120,
-        investmentCost: 50,
         additionalExpenses: 10,
+        profitPercent: 0.3,
         notes: "",
       },
       {
         date: "2026-08-04",
         totalSold: 310,
-        investmentCost: 140,
         additionalExpenses: 25,
+        profitPercent: 0.3,
         notes: "",
       },
       {
         date: "2026-08-03",
         totalSold: 250,
-        investmentCost: 100,
         additionalExpenses: 20,
+        profitPercent: 0.3,
         notes: "",
       },
     ];
 
     expect(deriveHomeKpis(overview, records)).toEqual({
       ventasUltimoDia: 310,
-      ultimaInversion: 140,
+      ultimaInversion: 217,
       beneficioBrutoTotalMes: 1250,
       beneficioNetoMesActual: 940,
       lastRecordDate: "2026-08-04",

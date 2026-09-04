@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { dailyRecordService } from '../../infrastructure/container';
 import { createMonthlyOverviewRefresher, UseMonthlyOverviewState } from './monthlyOverviewState';
 
-export function useMonthlyOverview() {
+export function useMonthlyOverview(month: Date) {
   const [state, setState] = useState<UseMonthlyOverviewState>({
     loading: true,
     overview: null,
@@ -10,7 +10,10 @@ export function useMonthlyOverview() {
     error: null,
   });
 
-  const refresh = useCallback(createMonthlyOverviewRefresher(dailyRecordService, setState), []);
+  const refresh = useCallback(
+    createMonthlyOverviewRefresher(dailyRecordService, setState, month),
+    [month],
+  );
 
   useEffect(() => {
     void refresh();

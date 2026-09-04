@@ -31,6 +31,50 @@ const schemaMigrations: Migration[] = [
       `);
     },
   },
+  {
+    version: 2,
+    name: 'create-investment-adjustments-table',
+    up: async (db) => {
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS investment_adjustments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT NOT NULL,
+          amount REAL NOT NULL,
+          note TEXT NOT NULL DEFAULT ''
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_investment_adjustments_date ON investment_adjustments(date);
+      `);
+    },
+  },
+  {
+    version: 3,
+    name: 'add-profit-percent-column',
+    up: async (db) => {
+      await db.execAsync(
+        'ALTER TABLE daily_records ADD COLUMN profit_percent REAL NOT NULL DEFAULT 0.3;'
+      );
+      await db.execAsync(
+        'ALTER TABLE daily_records ADD COLUMN net_profit REAL NOT NULL DEFAULT 0;'
+      );
+    },
+  },
+  {
+    version: 4,
+    name: 'repair-net-profit-column',
+    up: async (db) => {
+      const row = await db.getFirstAsync<{ hasColumn: number }>(
+        `SELECT COUNT(*) AS hasColumn
+         FROM pragma_table_info('daily_records')
+         WHERE name = 'net_profit';`
+      );
+      if (!row || row.hasColumn === 0) {
+        await db.execAsync(
+          'ALTER TABLE daily_records ADD COLUMN net_profit REAL NOT NULL DEFAULT 0;'
+        );
+      }
+    },
+  },
 ];
 
 async function getUserVersion(db: MigratableDatabase): Promise<number> {

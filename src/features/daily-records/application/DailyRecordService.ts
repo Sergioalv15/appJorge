@@ -12,6 +12,11 @@ function parseAmount(value: string): number {
   return Number(normalized);
 }
 
+function parsePercent(value: string): number {
+  const amount = parseAmount(value);
+  return amount / 100;
+}
+
 export class DailyRecordService {
   constructor(private readonly repository: DailyRecordRepository) {}
 
@@ -19,8 +24,8 @@ export class DailyRecordService {
     const normalized = validateAndNormalizeDailyRecord({
       date: data.date,
       totalSold: parseAmount(data.totalSold),
-      investmentCost: parseAmount(data.investmentCost),
       additionalExpenses: parseAmount(data.additionalExpenses),
+      profitPercent: parsePercent(data.profitPercent),
       notes: data.notes,
     });
 
@@ -40,6 +45,7 @@ export class DailyRecordService {
         profit: {
           grossProfit: 0,
           netProfit: 0,
+          investment: 0,
         },
       };
     }

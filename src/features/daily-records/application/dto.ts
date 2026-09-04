@@ -3,8 +3,8 @@ import { DailyRecord, DailyProfit, MonthlyOverview } from '../domain/types';
 export interface DailyRecordFormData {
   date: string;
   totalSold: string;
-  investmentCost: string;
   additionalExpenses: string;
+  profitPercent: string;
   notes: string;
 }
 
