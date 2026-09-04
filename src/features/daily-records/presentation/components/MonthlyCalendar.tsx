@@ -81,6 +81,12 @@ export function MonthlyCalendar({
 
         <View style={styles.monthTitleArea}>
           <Text
+            style={[styles.yearLabel, { color: theme.colors.calendarMutedText }]}
+            numberOfLines={1}
+          >
+            {visibleMonth.getFullYear()}
+          </Text>
+          <Text
             style={[styles.title, { color: theme.colors.calendarText }]}
             numberOfLines={1}
           >
@@ -410,6 +416,12 @@ const styles = StyleSheet.create({
     minWidth: 0,
     alignItems: "center",
     gap: 2,
+  },
+  yearLabel: {
+    fontSize: 12,
+    letterSpacing: 4,
+    fontWeight: "600",
+    textTransform: "uppercase",
   },
   title: {
     fontSize: 44,
