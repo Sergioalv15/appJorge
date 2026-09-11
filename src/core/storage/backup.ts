@@ -15,7 +15,7 @@ export interface BackupResult {
 }
 
 const BACKUP_DIRECTORY_NAME = 'backups';
-const BACKUP_FILE_NAME = 'modas-nicolas-backup.sqlite';
+const BACKUP_FILE_NAME = 'appjorge-backup.sqlite';
 
 export function createBackupService(): BackupService {
   return { exportBackup, restoreFromBackup };
