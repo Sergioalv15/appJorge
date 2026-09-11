@@ -1,9 +1,10 @@
 {
   "expo": {
-    "name": "appJorge",
+    "name": "Modas Nicolas",
     "slug": "appjorge",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "scheme": "appjorge",
     "userInterfaceStyle": "light",
     "platforms": [
@@ -15,14 +16,27 @@
       "typedRoutes": true
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-file-system",
+        {
+          "enableFileSharing": true,
+          "supportsOpeningDocumentsInPlace": true
+        }
+      ],
+      "expo-document-picker"
     ],
     "android": {
-      "package": "com.appjorge.mobile"
+      "package": "com.appjorge.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.appjorge.mobile",
       "supportsTablet": true,
+      "usesIcloudStorage": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
