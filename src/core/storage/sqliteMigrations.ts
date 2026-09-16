@@ -75,6 +75,82 @@ const schemaMigrations: Migration[] = [
       }
     },
   },
+  {
+    version: 5,
+    name: 'create-holidays-table',
+    up: async (db) => {
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS holidays (
+          date TEXT PRIMARY KEY NOT NULL,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL DEFAULT 'nacional'
+        );
+        CREATE INDEX IF NOT EXISTS idx_holidays_date ON holidays(date);
+
+        CREATE TABLE IF NOT EXISTS app_meta (
+          key TEXT PRIMARY KEY NOT NULL,
+          value TEXT NOT NULL
+        );
+      `);
+    },
+  },
+  {
+    version: 6,
+    name: 'create-suppliers-table',
+    up: async (db) => {
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS suppliers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          phone TEXT NOT NULL DEFAULT '',
+          notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL
+        );
+      `);
+    },
+  },
+  {
+    version: 7,
+    name: 'add-dataphone-sales-to-daily-records',
+    up: async (db) => {
+      const row = await db.getFirstAsync<{ hasColumn: number }>(
+        `SELECT COUNT(*) AS hasColumn
+         FROM pragma_table_info('daily_records')
+         WHERE name = 'dataphone_sales';`
+      );
+      if (!row || row.hasColumn === 0) {
+        await db.execAsync(
+          'ALTER TABLE daily_records ADD COLUMN dataphone_sales REAL NOT NULL DEFAULT 0;'
+        );
+      }
+    },
+  },
+  {
+    version: 8,
+    name: 'add-supplier-id-and-type-to-investment-adjustments',
+    up: async (db) => {
+      const hasSupplierId = await db.getFirstAsync<{ hasColumn: number }>(
+        `SELECT COUNT(*) AS hasColumn
+         FROM pragma_table_info('investment_adjustments')
+         WHERE name = 'supplier_id';`
+      );
+      if (!hasSupplierId || hasSupplierId.hasColumn === 0) {
+        await db.execAsync(
+          'ALTER TABLE investment_adjustments ADD COLUMN supplier_id INTEGER;'
+        );
+      }
+      const hasType = await db.getFirstAsync<{ hasColumn: number }>(
+        `SELECT COUNT(*) AS hasColumn
+         FROM pragma_table_info('investment_adjustments')
+         WHERE name = 'type';`
+      );
+      if (!hasType || hasType.hasColumn === 0) {
+        await db.execAsync(
+          "ALTER TABLE investment_adjustments ADD COLUMN type TEXT NOT NULL DEFAULT 'ajuste';"
+        );
+      }
+    },
+  },
 ];
 
 async function getUserVersion(db: MigratableDatabase): Promise<number> {

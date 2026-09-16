@@ -82,6 +82,53 @@ describe('validateAndNormalizeDailyRecord', () => {
     ).toThrowError(new ValidationError('notes cannot be longer than 300 characters'));
   });
 
+  it('normalizes dataphone sales rounding to 2 decimals', () => {
+    const result = validateAndNormalizeDailyRecord({
+      date: '2026-07-10',
+      totalSold: 0,
+      additionalExpenses: 0,
+      profitPercent: 0.3,
+      dataphoneSales: 80.999,
+    });
+
+    expect(result.dataphoneSales).toBe(81);
+  });
+
+  it('omits dataphone sales when not provided', () => {
+    const result = validateAndNormalizeDailyRecord({
+      date: '2026-07-10',
+      totalSold: 0,
+      additionalExpenses: 0,
+      profitPercent: 0.3,
+    });
+
+    expect(result.dataphoneSales).toBeUndefined();
+  });
+
+  it('rejects negative dataphone sales', () => {
+    expect(() =>
+      validateAndNormalizeDailyRecord({
+        date: '2026-07-10',
+        totalSold: 10,
+        additionalExpenses: 1,
+        profitPercent: 0.3,
+        dataphoneSales: -5,
+      })
+    ).toThrowError(new ValidationError('dataphoneSales cannot be negative'));
+  });
+
+  it('rejects NaN dataphone sales', () => {
+    expect(() =>
+      validateAndNormalizeDailyRecord({
+        date: '2026-07-10',
+        totalSold: 10,
+        additionalExpenses: 1,
+        profitPercent: 0.3,
+        dataphoneSales: Number.NaN,
+      })
+    ).toThrowError(new ValidationError('dataphoneSales must be a valid number'));
+  });
+
   it('rejects profit percent outside 0-1 range', () => {
     expect(() =>
       validateAndNormalizeDailyRecord({

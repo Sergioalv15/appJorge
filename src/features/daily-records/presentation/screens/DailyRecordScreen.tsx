@@ -39,6 +39,7 @@ export function DailyRecordScreen() {
         additionalExpenses={state.additionalExpenses}
         profitPercent={state.profitPercent}
         notes={state.notes}
+        dataphoneSales={state.dataphoneSales}
         grossProfit={state.previewProfit.grossProfit}
         netProfit={state.previewProfit.netProfit}
         investment={state.previewProfit.investment}
@@ -49,6 +50,7 @@ export function DailyRecordScreen() {
         onAdditionalExpensesChange={state.setAdditionalExpenses}
         onProfitPercentChange={state.setProfitPercent}
         onNotesChange={state.setNotes}
+        onDataphoneSalesChange={state.setDataphoneSales}
         onNoticeHide={() => state.setNotice(null)}
         onSave={state.save}
       />

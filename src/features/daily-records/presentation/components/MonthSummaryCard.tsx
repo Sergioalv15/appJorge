@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { formatCurrency } from "../../../../core/utils/currency";
 import { useTheme } from "../../../../core/theme/ThemeProvider";
 
@@ -8,6 +8,7 @@ interface MonthOverviewMetrics {
   totalAdditionalExpenses: number;
   grossProfit: number;
   netProfit: number;
+  totalDataphoneSales: number;
 }
 
 export interface MonthSummaryInput {
@@ -19,6 +20,7 @@ interface MonthSummaryCardProps {
   monthly: MonthSummaryInput;
   isCurrentMonth?: boolean;
   badge?: string | null;
+  onPressDataphone?: () => void;
 }
 
 export function formatMonthName(date: Date): string {
@@ -29,9 +31,22 @@ export function MonthSummaryCard({
   monthly,
   isCurrentMonth = false,
   badge = null,
+  onPressDataphone,
 }: MonthSummaryCardProps) {
   const { theme } = useTheme();
   const { month, overview } = monthly;
+
+  const dataphoneLine = (
+    <View style={styles.metricLine}>
+      <Text style={[styles.metricLabel, { color: theme.colors.mutedText }]}>
+        Datafono
+      </Text>
+      <Text style={[styles.metricValue, { color: theme.colors.primary }]}>
+        {formatCurrency(overview.totalDataphoneSales)}
+        {onPressDataphone ? <Text style={styles.dataphoneHint}>  ver ›</Text> : null}
+      </Text>
+    </View>
+  );
 
   return (
     <View
@@ -90,6 +105,20 @@ export function MonthSummaryCard({
           {formatCurrency(overview.netProfit)}
         </Text>
       </View>
+
+      {onPressDataphone ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Ventas datafono de ${formatMonthName(month)}`}
+          accessibilityHint="Abre el detalle de ventas datafono de este mes"
+          style={({ pressed }) => [pressed ? styles.dataphonePressed : null]}
+          onPress={onPressDataphone}
+        >
+          {dataphoneLine}
+        </Pressable>
+      ) : (
+        dataphoneLine
+      )}
     </View>
   );
 }
@@ -127,5 +156,12 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 14,
     fontWeight: "700",
+  },
+  dataphoneHint: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  dataphonePressed: {
+    opacity: 0.62,
   },
 });

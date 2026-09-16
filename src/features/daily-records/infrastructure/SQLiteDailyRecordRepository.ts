@@ -8,6 +8,7 @@ type DailyRecordRow = {
   additional_expenses: number;
   profit_percent: number;
   notes: string;
+  dataphone_sales: number;
 };
 
 function mapRow(row: DailyRecordRow): DailyRecord {
@@ -17,6 +18,7 @@ function mapRow(row: DailyRecordRow): DailyRecord {
     additionalExpenses: row.additional_expenses,
     profitPercent: row.profit_percent,
     notes: row.notes,
+    dataphoneSales: row.dataphone_sales,
   };
 }
 
@@ -29,14 +31,15 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
 
     await db.runAsync(
       `
-      INSERT INTO daily_records (date, total_sold, investment_cost, additional_expenses, profit_percent, net_profit, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO daily_records (date, total_sold, investment_cost, additional_expenses, profit_percent, net_profit, notes, dataphone_sales)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(date) DO UPDATE SET
         total_sold = excluded.total_sold,
         investment_cost = excluded.investment_cost,
         additional_expenses = excluded.additional_expenses,
         profit_percent = excluded.profit_percent,
-        notes = excluded.notes
+        notes = excluded.notes,
+        dataphone_sales = excluded.dataphone_sales
       `,
       [
         record.date,
@@ -46,6 +49,7 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
         record.profitPercent,
         0,
         record.notes,
+        record.dataphoneSales ?? 0,
       ]
     );
   }
@@ -54,7 +58,7 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
     await initializeDatabase();
     const db = await getDb();
     const row = await db.getFirstAsync<DailyRecordRow>(
-      `SELECT date, total_sold, additional_expenses, profit_percent, notes FROM daily_records WHERE date = ?`,
+      `SELECT date, total_sold, additional_expenses, profit_percent, notes, dataphone_sales FROM daily_records WHERE date = ?`,
       [date]
     );
 
@@ -67,7 +71,7 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
 
     const rows = await db.getAllAsync<DailyRecordRow>(
       `
-      SELECT date, total_sold, additional_expenses, profit_percent, notes
+      SELECT date, total_sold, additional_expenses, profit_percent, notes, dataphone_sales
       FROM daily_records
       WHERE substr(date, 1, 7) = ?
       ORDER BY date ASC

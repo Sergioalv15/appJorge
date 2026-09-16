@@ -13,6 +13,7 @@ function createOverview(overrides: Partial<MonthlyOverview> = {}): MonthlyOvervi
     averageDailyNetProfit: 0,
     estimatedSalary: 0,
     trackedDays: 0,
+    totalDataphoneSales: 0,
     ...overrides,
   };
 }

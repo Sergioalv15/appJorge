@@ -79,5 +79,41 @@ describe('computeMonthlyOverview', () => {
     expect(result.averageDailyNetProfit).toBe(0);
     expect(result.estimatedSalary).toBe(0);
     expect(result.trackedDays).toBe(0);
+    expect(result.totalDataphoneSales).toBe(0);
+  });
+
+  it('aggregates dataphone sales without affecting profit logic', () => {
+    const records: DailyRecord[] = [
+      {
+        date: '2026-07-01',
+        totalSold: 200,
+        additionalExpenses: 20,
+        profitPercent: 0.3,
+        notes: '',
+        dataphoneSales: 120,
+      },
+      {
+        date: '2026-07-02',
+        totalSold: 350,
+        additionalExpenses: 40,
+        profitPercent: 0.3,
+        notes: '',
+        dataphoneSales: 0,
+      },
+      {
+        date: '2026-07-03',
+        totalSold: 100,
+        additionalExpenses: 10,
+        profitPercent: 0.3,
+        notes: '',
+      },
+    ];
+
+    const result = computeMonthlyOverview('2026-07', records);
+
+    expect(result.totalDataphoneSales).toBe(120);
+    expect(result.totalSold).toBe(650);
+    expect(result.netProfit).toBe(125);
+    expect(result.totalInvested).toBe(455);
   });
 });

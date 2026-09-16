@@ -6,6 +6,7 @@ export interface DailyRecordFormData {
   additionalExpenses: string;
   profitPercent: string;
   notes: string;
+  dataphoneSales: string;
 }
 
 export interface DailyRecordViewModel {

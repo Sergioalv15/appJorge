@@ -6,6 +6,9 @@ class FakeDb {
   readonly executedSql: string[] = [];
   shouldFail = false;
   netProfitColumnExists = false;
+  dataphoneSalesColumnExists = false;
+  supplierIdColumnExists = false;
+  investmentTypeColumnExists = false;
 
   constructor(initialVersion: number) {
     this.version = initialVersion;
@@ -17,7 +20,19 @@ class FakeDb {
       return { user_version: this.version } as T;
     }
     if (source.includes('pragma_table_info')) {
-      return { hasColumn: this.netProfitColumnExists ? 1 : 0 } as T;
+      if (source.includes("'net_profit'")) {
+        return { hasColumn: this.netProfitColumnExists ? 1 : 0 } as T;
+      }
+      if (source.includes("'dataphone_sales'")) {
+        return { hasColumn: this.dataphoneSalesColumnExists ? 1 : 0 } as T;
+      }
+      if (source.includes("'supplier_id'")) {
+        return { hasColumn: this.supplierIdColumnExists ? 1 : 0 } as T;
+      }
+      if (source.includes("'type'")) {
+        return { hasColumn: this.investmentTypeColumnExists ? 1 : 0 } as T;
+      }
+      return { hasColumn: 0 } as T;
     }
 
     return null;
@@ -52,10 +67,14 @@ describe('runMigrations', () => {
     expect(db.executedSql).toContain('PRAGMA user_version = 2;');
     expect(db.executedSql).toContain('PRAGMA user_version = 3;');
     expect(db.executedSql).toContain('PRAGMA user_version = 4;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 5;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 6;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 7;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 8;');
   });
 
   it('skips migrations when user_version is up to date', async () => {
-    const db = new FakeDb(4);
+    const db = new FakeDb(8);
 
     await runMigrations(db);
 
@@ -71,6 +90,10 @@ describe('runMigrations', () => {
     expect(db.executedSql).toContain('PRAGMA user_version = 2;');
     expect(db.executedSql).toContain('PRAGMA user_version = 3;');
     expect(db.executedSql).toContain('PRAGMA user_version = 4;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 5;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 6;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 7;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 8;');
     expect(db.executedSql.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS daily_records'))).toBe(false);
   });
 
@@ -100,5 +123,67 @@ describe('runMigrations', () => {
 
     expect(db.executedSql).toContain('PRAGMA user_version = 4;');
     expect(db.executedSql.some((sql) => sql.toLowerCase().includes('add column net_profit'))).toBe(false);
+  });
+
+  it('v5 crea tabla holidays', async () => {
+    const db = new FakeDb(4);
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 5;');
+    expect(db.executedSql.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS holidays'))).toBe(true);
+  });
+
+  it('v6 crea tabla suppliers', async () => {
+    const db = new FakeDb(5);
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 6;');
+    expect(db.executedSql.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS suppliers'))).toBe(true);
+  });
+
+  it('v7 agrega dataphone_sales cuando falta', async () => {
+    const db = new FakeDb(6);
+    db.dataphoneSalesColumnExists = false;
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 7;');
+    expect(db.executedSql.some((sql) => sql.toLowerCase().includes('add column dataphone_sales'))).toBe(true);
+  });
+
+  it('v7 omite el ALTER cuando dataphone_sales ya existe', async () => {
+    const db = new FakeDb(6);
+    db.dataphoneSalesColumnExists = true;
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 7;');
+    expect(db.executedSql.some((sql) => sql.toLowerCase().includes('add column dataphone_sales'))).toBe(false);
+  });
+
+  it('v8 agrega supplier_id y type cuando faltan', async () => {
+    const db = new FakeDb(7);
+    db.supplierIdColumnExists = false;
+    db.investmentTypeColumnExists = false;
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 8;');
+    expect(db.executedSql.some((sql) => sql.toLowerCase().includes('add column supplier_id'))).toBe(true);
+    expect(db.executedSql.some((sql) => sql.toLowerCase().includes("add column type text"))).toBe(true);
+  });
+
+  it('v8 omite ALTERs cuando columnas ya existen', async () => {
+    const db = new FakeDb(7);
+    db.supplierIdColumnExists = true;
+    db.investmentTypeColumnExists = true;
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 8;');
+    expect(db.executedSql.some((sql) => sql.toLowerCase().includes('add column supplier_id'))).toBe(false);
+    expect(db.executedSql.some((sql) => sql.toLowerCase().includes("add column type text"))).toBe(false);
   });
 });

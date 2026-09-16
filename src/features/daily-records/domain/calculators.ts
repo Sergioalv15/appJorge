@@ -28,6 +28,7 @@ export function computeMonthlyOverview(month: string, records: DailyRecord[]): M
       acc.grossProfit += profit.grossProfit;
       acc.netProfit += profit.netProfit;
       acc.totalInvested += profit.investment;
+      acc.totalDataphoneSales += record.dataphoneSales ?? 0;
       return acc;
     },
     {
@@ -36,6 +37,7 @@ export function computeMonthlyOverview(month: string, records: DailyRecord[]): M
       totalAdditionalExpenses: 0,
       grossProfit: 0,
       netProfit: 0,
+      totalDataphoneSales: 0,
     }
   );
 

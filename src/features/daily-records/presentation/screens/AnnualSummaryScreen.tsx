@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { Screen } from "../../../../ui/components/Screen";
 import { useTheme } from "../../../../core/theme/ThemeProvider";
 import { useAnnualSummary } from "../hooks/useAnnualSummary";
 import { MonthSummaryCard } from "../components/MonthSummaryCard";
+import { monthKey } from "../../../../core/utils/date";
 
 function formatYear(date: Date): string {
   return String(date.getFullYear());
@@ -11,6 +13,7 @@ function formatYear(date: Date): string {
 
 export function AnnualSummaryScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const [visibleYear, setVisibleYear] = useState(currentYear);
 
@@ -111,6 +114,9 @@ export function AnnualSummaryScreen() {
                 visibleYear === currentYear
               }
               badge="Actual"
+              onPressDataphone={() =>
+                router.push(`/dataphone/${monthKey(monthly.month)}` as never)
+              }
             />
           ))}
         </View>

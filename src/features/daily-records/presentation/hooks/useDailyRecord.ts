@@ -15,6 +15,7 @@ export function useDailyRecord(date: string) {
   const [additionalExpenses, setAdditionalExpenses] = useState('');
   const [profitPercent, setProfitPercent] = useState('30');
   const [notes, setNotes] = useState('');
+  const [dataphoneSales, setDataphoneSales] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,11 +29,15 @@ export function useDailyRecord(date: string) {
         setAdditionalExpenses(String(result.record.additionalExpenses));
         setProfitPercent(String(Math.round(result.record.profitPercent * 100)));
         setNotes(result.record.notes);
+        setDataphoneSales(
+          result.record.dataphoneSales !== undefined ? String(result.record.dataphoneSales) : ''
+        );
       } else {
         setTotalSold('');
         setAdditionalExpenses('');
         setProfitPercent('30');
         setNotes('');
+        setDataphoneSales('');
       }
     } catch {
       setError('Could not load this day');
@@ -69,6 +74,7 @@ export function useDailyRecord(date: string) {
         additionalExpenses,
         profitPercent,
         notes,
+        dataphoneSales,
       });
 
       setRecord(result.record);
@@ -82,7 +88,7 @@ export function useDailyRecord(date: string) {
     } finally {
       setSaving(false);
     }
-  }, [additionalExpenses, date, notes, profitPercent, totalSold]);
+  }, [additionalExpenses, date, notes, profitPercent, totalSold, dataphoneSales]);
 
   return {
     loading,
@@ -94,10 +100,12 @@ export function useDailyRecord(date: string) {
     additionalExpenses,
     profitPercent,
     notes,
+    dataphoneSales,
     setTotalSold,
     setAdditionalExpenses,
     setProfitPercent,
     setNotes,
+    setDataphoneSales,
     setNotice,
     save,
     previewProfit,

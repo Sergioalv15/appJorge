@@ -15,6 +15,7 @@ function createOverview(month: string) {
     averageDailyNetProfit: 90,
     estimatedSalary: 5400,
     trackedDays: 2,
+    totalDataphoneSales: 0,
   };
 }
 

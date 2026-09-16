@@ -27,6 +27,7 @@ export class DailyRecordService {
       additionalExpenses: parseAmount(data.additionalExpenses),
       profitPercent: parsePercent(data.profitPercent),
       notes: data.notes,
+      dataphoneSales: parseAmount(data.dataphoneSales),
     });
 
     await this.repository.upsert(normalized);

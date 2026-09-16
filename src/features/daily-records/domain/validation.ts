@@ -41,13 +41,20 @@ export function validateAndNormalizeDailyRecord(input: DailyRecordInput): DailyR
     throw new ValidationError('notes cannot be longer than 300 characters');
   }
 
-  return {
+  const normalized: DailyRecord = {
     date: input.date,
     totalSold: round2(input.totalSold),
     additionalExpenses: round2(input.additionalExpenses),
     profitPercent: round4(input.profitPercent),
     notes,
   };
+
+  if (input.dataphoneSales !== undefined) {
+    assertNonNegative(input.dataphoneSales, 'dataphoneSales');
+    normalized.dataphoneSales = round2(input.dataphoneSales);
+  }
+
+  return normalized;
 }
 
 function round2(value: number): number {

@@ -39,6 +39,7 @@ describe('DailyRecordService', () => {
       additionalExpenses: '10,2',
       profitPercent: '30',
       notes: '  market day ',
+      dataphoneSales: '80,5',
     });
 
     expect(result.record).toEqual({
@@ -47,6 +48,7 @@ describe('DailyRecordService', () => {
       additionalExpenses: 10.2,
       profitPercent: 0.3,
       notes: 'market day',
+      dataphoneSales: 80.5,
     });
     expect(result.profit).toEqual({
       grossProfit: 230.5,
@@ -74,6 +76,7 @@ describe('DailyRecordService', () => {
       additionalExpenses: '10',
       profitPercent: '30',
       notes: '',
+      dataphoneSales: '20',
     });
     await service.saveFromForm({
       date: '2026-07-02',
@@ -81,6 +84,7 @@ describe('DailyRecordService', () => {
       additionalExpenses: '20',
       profitPercent: '30',
       notes: '',
+      dataphoneSales: '',
     });
 
     const result = await service.getMonthlyOverview(new Date(2026, 6, 25));
@@ -92,5 +96,6 @@ describe('DailyRecordService', () => {
     expect(result.overview.totalAdditionalExpenses).toBe(30);
     expect(result.overview.grossProfit).toBe(400);
     expect(result.overview.netProfit).toBe(90);
+    expect(result.overview.totalDataphoneSales).toBe(20);
   });
 });

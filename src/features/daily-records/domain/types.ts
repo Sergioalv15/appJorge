@@ -4,6 +4,7 @@ export interface DailyRecord {
   additionalExpenses: number;
   profitPercent: number;
   notes: string;
+  dataphoneSales?: number;
 }
 
 export interface DailyProfit {
@@ -22,4 +23,5 @@ export interface MonthlyOverview {
   averageDailyNetProfit: number;
   estimatedSalary: number;
   trackedDays: number;
+  totalDataphoneSales: number;
 }

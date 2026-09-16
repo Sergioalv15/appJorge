@@ -10,6 +10,7 @@ interface Props {
   additionalExpenses: string;
   profitPercent: string;
   notes: string;
+  dataphoneSales: string;
   grossProfit: number;
   netProfit: number;
   investment: number;
@@ -20,6 +21,7 @@ interface Props {
   onAdditionalExpensesChange: (value: string) => void;
   onProfitPercentChange: (value: string) => void;
   onNotesChange: (value: string) => void;
+  onDataphoneSalesChange: (value: string) => void;
   onNoticeHide: () => void;
   onSave: () => void;
 }
@@ -65,6 +67,33 @@ export function DailyRecordForm(props: Props) {
             },
           ]}
         />
+      </Field>
+
+      <Field label="Ventas datafono (€)" labelId="dataphone-sales-label">
+        <TextInput
+          accessibilityLabelledBy="dataphone-sales-label"
+          accessibilityLabel="Ventas datafono en euros"
+          accessibilityHint="Ingresá cuánto se vendió con el datafono. Solo es un registro informativo, no afecta los cálculos"
+          keyboardType="decimal-pad"
+          value={props.dataphoneSales}
+          onChangeText={props.onDataphoneSalesChange}
+          placeholder="0"
+          placeholderTextColor={theme.colors.mutedText}
+          selectionColor={theme.colors.primary}
+          style={[
+            styles.input,
+            {
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.md,
+              paddingHorizontal: theme.spacing.sm,
+              color: theme.colors.text,
+              backgroundColor: theme.colors.inputBackground,
+            },
+          ]}
+        />
+        <Text style={[styles.fieldHint, { color: theme.colors.mutedText }]}>
+          Solo registro informativo, no afecta los cálculos
+        </Text>
       </Field>
 
       <Field label="Porcentaje de beneficio (%)" labelId="profit-percent-label">
@@ -263,6 +292,9 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  fieldHint: {
+    fontSize: 11,
   },
   input: {
     borderWidth: 1,
