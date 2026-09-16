@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 import { useCallback, useMemo, useRef } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Screen } from "../../../../ui/components/Screen";
 import { useTheme } from "../../../../core/theme/ThemeProvider";
 import { useMonthlyOverview } from "../hooks/useMonthlyOverview";
@@ -15,9 +15,11 @@ import { KpiCard } from "../components/KpiCard";
 import { MonthSummaryCard } from "../components/MonthSummaryCard";
 import { deriveHomeKpis } from "../home/deriveHomeKpis";
 import { formatCurrency } from "../../../../core/utils/currency";
-import { addMonths, startOfMonth } from "../../../../core/utils/date";
+import { addMonths, startOfMonth, monthKey } from "../../../../core/utils/date";
 import { useInvestmentBalance } from "../../investment/presentation/hooks/useInvestmentBalance";
 import { InvestmentBalanceCard } from "../../investment/presentation/components/InvestmentBalanceCard";
+import { QuickActionRow } from "../components/QuickActionRow";
+import { UpcomingHolidaysCard } from "../components/UpcomingHolidaysCard";
 import { LinearGradient } from "expo-linear-gradient";
 
 function formatRecordDate(date: string | null): string {
@@ -61,6 +63,7 @@ function HeaderDivider() {
 
 export function HomeScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
   const overviewMonth = useMemo(() => startOfMonth(new Date()), []);
   const previousMonth = useMemo(() => addMonths(overviewMonth, -1), [overviewMonth]);
   const { loading, error, overview, records, refresh } = useMonthlyOverview(overviewMonth);
@@ -158,6 +161,14 @@ export function HomeScreen() {
         />
       </View>
 
+      <View style={styles.quickActions}>
+        <QuickActionRow />
+      </View>
+
+      <HeaderDivider />
+
+      <UpcomingHolidaysCard />
+
       <HeaderDivider />
 
       {prev.loading ? (
@@ -167,6 +178,9 @@ export function HomeScreen() {
       ) : prev.overview ? (
         <MonthSummaryCard
           monthly={{ month: previousMonth, overview: prev.overview }}
+          onPressDataphone={() =>
+            router.push(`/dataphone/${monthKey(previousMonth)}` as never)
+          }
         />
       ) : null}
 
@@ -176,10 +190,12 @@ export function HomeScreen() {
         available={investmentBalance.available}
         adjustmentsTotal={investmentBalance.adjustmentsTotal}
         investedTotal={investmentBalance.investedTotal}
+        purchasesTotal={investmentBalance.purchasesTotal}
         loading={investmentBalance.loading}
         adding={investmentBalance.adding}
         error={investmentBalance.error ?? investmentBalance.addError}
         onAddAdjustment={investmentBalance.addAdjustment}
+        onAddPurchase={investmentBalance.addPurchase}
         onRefresh={() => void investmentBalance.refresh()}
       />
     </Screen>
@@ -213,6 +229,9 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     rowGap: 10,
+  },
+  quickActions: {
+    marginTop: 14,
   },
   prevLoading: {
     alignItems: "center",

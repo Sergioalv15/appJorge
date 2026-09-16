@@ -37,6 +37,13 @@ export default function DrawerLayout() {
           drawerLabel: drawerRouteLabels.annual,
         }}
       />
+      <Drawer.Screen
+        name="suppliers"
+        options={{
+          title: drawerRouteLabels.suppliers,
+          drawerLabel: drawerRouteLabels.suppliers,
+        }}
+      />
     </Drawer>
   );
 }

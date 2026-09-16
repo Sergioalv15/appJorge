@@ -1,6 +1,13 @@
 import { DailyRecordRepository } from '../../application/DailyRecordRepository';
-import { InvestmentAdjustment } from '../domain/types';
+import { InvestmentAdjustment, InvestmentBalance, InvestmentHistoryItem } from '../domain/types';
 import { InvestmentAdjustmentRepository } from './InvestmentAdjustmentRepository';
+
+export interface AddPurchaseInput {
+  date: string;
+  amount: number;
+  note: string;
+  supplierId?: number | null;
+}
 
 export class InvestmentBalanceService {
   constructor(
@@ -8,16 +15,18 @@ export class InvestmentBalanceService {
     private readonly dailyRecordRepository: DailyRecordRepository
   ) {}
 
-  async getBalance(): Promise<{ available: number; adjustmentsTotal: number; investedTotal: number }> {
-    const [adjustmentsTotal, investedTotal] = await Promise.all([
+  async getBalance(): Promise<InvestmentBalance> {
+    const [adjustmentsTotal, purchasesTotal, investedTotal] = await Promise.all([
       this.adjustmentRepository.sumAmount(),
+      this.adjustmentRepository.sumPurchases(),
       this.dailyRecordRepository.sumInvestmentCost(),
     ]);
 
     return {
-      available: adjustmentsTotal + investedTotal,
+      available: adjustmentsTotal + investedTotal - purchasesTotal,
       adjustmentsTotal,
       investedTotal,
+      purchasesTotal,
     };
   }
 
@@ -26,10 +35,28 @@ export class InvestmentBalanceService {
     amount: number;
     note: string;
   }): Promise<InvestmentAdjustment> {
-    return this.adjustmentRepository.add(input);
+    return this.adjustmentRepository.add({ ...input, type: 'ajuste' });
+  }
+
+  async addPurchase(input: AddPurchaseInput): Promise<InvestmentAdjustment> {
+    return this.adjustmentRepository.add({
+      date: input.date,
+      amount: Math.abs(input.amount),
+      note: input.note,
+      type: 'compra',
+      supplierId: input.supplierId ?? null,
+    });
   }
 
   async listAdjustments(): Promise<InvestmentAdjustment[]> {
     return this.adjustmentRepository.listAll();
+  }
+
+  async listPurchases(): Promise<InvestmentAdjustment[]> {
+    return this.adjustmentRepository.listAll(['compra']);
+  }
+
+  async listHistory(): Promise<InvestmentHistoryItem[]> {
+    return this.adjustmentRepository.listHistory();
   }
 }

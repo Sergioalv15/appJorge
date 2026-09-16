@@ -6,6 +6,7 @@ export interface InvestmentBalanceState {
   available: number;
   adjustmentsTotal: number;
   investedTotal: number;
+  purchasesTotal: number;
   error: string | null;
   adding: boolean;
   addError: string | null;
@@ -17,6 +18,7 @@ export function useInvestmentBalance() {
     available: 0,
     adjustmentsTotal: 0,
     investedTotal: 0,
+    purchasesTotal: 0,
     error: null,
     adding: false,
     addError: null,
@@ -32,6 +34,7 @@ export function useInvestmentBalance() {
         available: balance.available,
         adjustmentsTotal: balance.adjustmentsTotal,
         investedTotal: balance.investedTotal,
+        purchasesTotal: balance.purchasesTotal,
       }));
     } catch (cause) {
       const technicalMessage =
@@ -68,6 +71,27 @@ export function useInvestmentBalance() {
     [refresh]
   );
 
+  const addPurchase = useCallback(
+    async (input: { date: string; amount: number; note: string; supplierId?: number | null }) => {
+      setState((prev) => ({ ...prev, adding: true, addError: null }));
+
+      try {
+        await investmentBalanceService.addPurchase(input);
+        await refresh();
+        setState((prev) => ({ ...prev, adding: false }));
+        return true;
+      } catch (cause) {
+        setState((prev) => ({
+          ...prev,
+          adding: false,
+          addError: 'No se pudo guardar la compra.',
+        }));
+        return false;
+      }
+    },
+    [refresh]
+  );
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -76,5 +100,6 @@ export function useInvestmentBalance() {
     ...state,
     refresh,
     addAdjustment,
+    addPurchase,
   };
 }

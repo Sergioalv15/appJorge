@@ -9,15 +9,26 @@ import {
 } from 'react-native';
 import { formatCurrency } from '../../../../../core/utils/currency';
 import { useTheme } from '../../../../../core/theme/ThemeProvider';
+import {
+  InvestmentPurchaseButton,
+  InvestmentPurchaseModal,
+} from './InvestmentPurchaseModal';
 
 interface Props {
   available: number;
   adjustmentsTotal: number;
   investedTotal: number;
+  purchasesTotal: number;
   loading: boolean;
   adding: boolean;
   error: string | null;
   onAddAdjustment: (input: { date: string; amount: number; note: string }) => Promise<boolean>;
+  onAddPurchase: (input: {
+    date: string;
+    amount: number;
+    note: string;
+    supplierId?: number | null;
+  }) => Promise<boolean>;
   onRefresh: () => void;
 }
 
@@ -25,10 +36,12 @@ export function InvestmentBalanceCard({
   available,
   adjustmentsTotal,
   investedTotal,
+  purchasesTotal,
   loading,
   adding,
   error,
   onAddAdjustment,
+  onAddPurchase,
   onRefresh,
 }: Props) {
   const { theme } = useTheme();
@@ -36,6 +49,22 @@ export function InvestmentBalanceCard({
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [isWithdrawal, setIsWithdrawal] = useState(false);
+  const [purchaseVisible, setPurchaseVisible] = useState(false);
+
+  const handlePurchaseSubmit = async (input: {
+    date: string;
+    amount: string;
+    note: string;
+    supplierId: number | null;
+  }) => {
+    const parsed = Number(input.amount) || 0;
+    return onAddPurchase({
+      date: input.date,
+      amount: parsed,
+      note: input.note,
+      supplierId: input.supplierId,
+    });
+  };
 
   const openModal = () => {
     setAmount('');
@@ -91,6 +120,9 @@ export function InvestmentBalanceCard({
         <Text style={[styles.breakdownItem, { color: theme.colors.mutedText }]}>
           Ajustes manuales: {loading ? '...' : formatCurrency(adjustmentsTotal)}
         </Text>
+        <Text style={[styles.breakdownItem, { color: theme.colors.mutedText }]}>
+          Invertido en compras: {loading ? '...' : formatCurrency(-purchasesTotal)}
+        </Text>
       </View>
 
       {error ? (
@@ -119,6 +151,10 @@ export function InvestmentBalanceCard({
         >
           <Text style={styles.buttonText}>Agregar / Ajustar</Text>
         </Pressable>
+        <InvestmentPurchaseButton
+          adding={adding}
+          onPress={() => setPurchaseVisible(true)}
+        />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Recargar capital para invertir"
@@ -272,6 +308,13 @@ export function InvestmentBalanceCard({
           </View>
         </View>
       </Modal>
+
+      <InvestmentPurchaseModal
+        visible={purchaseVisible}
+        saving={adding}
+        onClose={() => setPurchaseVisible(false)}
+        onSubmit={handlePurchaseSubmit}
+      />
     </View>
   );
 }
