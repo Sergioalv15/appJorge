@@ -51,7 +51,7 @@ describe('DailyRecordService', () => {
       dataphoneSales: 80.5,
     });
     expect(result.profit).toEqual({
-      grossProfit: 230.5,
+      grossProfit: 69.15,
       netProfit: 58.95,
       investment: 161.35,
     });
@@ -94,7 +94,7 @@ describe('DailyRecordService', () => {
     expect(result.overview.totalSold).toBe(400);
     expect(result.overview.totalInvested).toBe(280);
     expect(result.overview.totalAdditionalExpenses).toBe(30);
-    expect(result.overview.grossProfit).toBe(400);
+    expect(result.overview.grossProfit).toBe(120);
     expect(result.overview.netProfit).toBe(90);
     expect(result.overview.totalDataphoneSales).toBe(20);
   });

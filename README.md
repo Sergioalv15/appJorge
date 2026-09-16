@@ -12,7 +12,7 @@ Una app simple, rápida e intuitiva para autónomos, pequeños comercios y negoc
 
 ## Features
 
-- **Daily record screen** — total sold (€), profit % (default 30%), additional expenses, notes. Investment amount and gross/net profit are auto-computed and read-only (investment = `totalSold × (1 - profitPercent)`; netProfit = `max(0, totalSold × profitPercent - additionalExpenses)`).
+- **Daily record screen** — total sold (€), profit % (default 30%), additional expenses, notes. Investment amount and gross/net profit are auto-computed and read-only (investment = `totalSold × (1 - profitPercent)`; grossProfit = `totalSold × profitPercent`; netProfit = `grossProfit - additionalExpenses`, may be negative).
 - **Monthly + biweekly calendar views** — per-day record-status indicators; tapping a day opens that date's record.
 - **Home dashboard** — 4 KPIs (last-day sales, last-day amount allocated to investment, month gross profit, month net profit), a previous-month summary card, and an investment-balance card (capital available to invest) with manual add/retire adjustments.
 - **Annual summary screen** — per-month summary cards with year navigation.
@@ -79,11 +79,12 @@ src/
 | `profitPercent`      | user input (default) | number  |
 | `notes`              | user input           | string  |
 
-Both derived fields are **computed live on every render** — never stored by the user:
+All derived fields are **computed live on every render** — never stored by the user:
 
 ```
 investment    = totalSold × (1 - profitPercent)
-netProfit     = clamp(0, totalSold × profitPercent - additionalExpenses)
+grossProfit   = totalSold × profitPercent
+netProfit     = grossProfit - additionalExpenses   (may be negative)
 ```
 
 Formulas sourced from `calculators.ts`.

@@ -200,8 +200,17 @@ export function DailyRecordForm(props: Props) {
       >
         <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>Beneficio bruto</Text>
         <Text style={[styles.profitValue, { color: theme.colors.text }]}>{formatCurrency(props.grossProfit)}</Text>
-        <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>Beneficio neto (calculado)</Text>
-        <Text style={[styles.profitValue, { color: theme.colors.success }]}>{formatCurrency(props.netProfit)}</Text>
+        <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>
+          {props.netProfit < 0 ? 'Pérdida neta (calculada)' : 'Beneficio neto (calculado)'}
+        </Text>
+        <Text
+          style={[
+            styles.profitValue,
+            { color: props.netProfit < 0 ? theme.colors.danger : theme.colors.success },
+          ]}
+        >
+          {formatCurrency(props.netProfit)}
+        </Text>
       </View>
 
       {props.error ? (

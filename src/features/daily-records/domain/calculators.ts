@@ -5,11 +5,12 @@ const DEFAULT_PROFIT_PERCENT = 0.3;
 export function computeDailyProfit(
   input: Pick<DailyRecord, 'totalSold' | 'profitPercent' | 'additionalExpenses'>
 ): DailyProfit {
-  const netProfit = Math.max(0, round2(input.totalSold * input.profitPercent) - input.additionalExpenses);
+  const grossProfit = round2(input.totalSold * input.profitPercent);
+  const netProfit = normalizeNegativeZero(round2(grossProfit - input.additionalExpenses));
   const investment = round2(input.totalSold * (1 - input.profitPercent));
 
   return {
-    grossProfit: input.totalSold,
+    grossProfit,
     netProfit,
     investment,
   };
@@ -17,6 +18,10 @@ export function computeDailyProfit(
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function normalizeNegativeZero(value: number): number {
+  return value === 0 ? 0 : value;
 }
 
 export function computeMonthlyOverview(month: string, records: DailyRecord[]): MonthlyOverview {

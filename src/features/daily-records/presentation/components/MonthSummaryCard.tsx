@@ -101,7 +101,7 @@ export function MonthSummaryCard({
         <Text style={[styles.metricLabel, { color: theme.colors.mutedText }]}>
           Neto
         </Text>
-        <Text style={[styles.metricValue, { color: theme.colors.success }]}>
+        <Text style={[styles.metricValue, { color: overview.netProfit < 0 ? theme.colors.danger : theme.colors.success }]}>
           {formatCurrency(overview.netProfit)}
         </Text>
       </View>

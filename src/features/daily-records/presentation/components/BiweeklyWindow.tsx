@@ -168,7 +168,7 @@ export function BiweeklyWindow({
                     Neto
                   </Text>
                   <Text
-                    style={[styles.summaryValue, { color: theme.colors.success }]}
+                    style={[styles.summaryValue, { color: profit.netProfit < 0 ? theme.colors.danger : theme.colors.success }]}
                     numberOfLines={1}
                   >
                     {formatCurrency(profit.netProfit)}

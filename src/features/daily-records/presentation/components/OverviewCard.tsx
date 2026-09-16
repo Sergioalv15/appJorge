@@ -29,7 +29,7 @@ export function OverviewCard({ overview }: Props) {
         <Metric label="Invertido" value={formatCurrency(overview.totalInvested)} />
         <Metric label="Gastos" value={formatCurrency(overview.totalAdditionalExpenses)} />
         <Metric label="Bruto" value={formatCurrency(overview.grossProfit)} />
-        <Metric label="Neto" value={formatCurrency(overview.netProfit)} highlight />
+        <Metric label="Neto" value={formatCurrency(overview.netProfit)} highlight={overview.netProfit >= 0} danger={overview.netProfit < 0} />
         <Metric label="Salario (30%)" value={formatCurrency(overview.estimatedSalary)} />
       </View>
       <Text style={[styles.meta, { color: theme.colors.mutedText }]}>Días con registro: {overview.trackedDays}</Text>
@@ -37,7 +37,7 @@ export function OverviewCard({ overview }: Props) {
   );
 }
 
-function Metric({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+function Metric({ label, value, highlight = false, danger = false }: { label: string; value: string; highlight?: boolean; danger?: boolean }) {
   const { theme } = useTheme();
 
   return (
@@ -48,6 +48,7 @@ function Metric({ label, value, highlight = false }: { label: string; value: str
           styles.metricValue,
           { color: theme.colors.text },
           highlight ? { color: theme.colors.success } : null,
+          danger ? { color: theme.colors.danger } : null,
         ]}
       >
         {value}
