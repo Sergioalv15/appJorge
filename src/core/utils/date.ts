@@ -10,6 +10,18 @@ export function parseIsoDate(iso: string): Date {
   return new Date(year, month - 1, day);
 }
 
+export function formatSpanishShortDate(date: Date): string {
+  const weekday = date
+    .toLocaleDateString('es-ES', { weekday: 'short' })
+    .replace(/\.$/, '');
+  const calendarDate = date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+  return `${weekday} ${calendarDate}`;
+}
+
 export function monthKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -91,30 +103,38 @@ export function isIsoTodayLocal(iso: string, now = new Date()): boolean {
   return iso === toIsoDate(now);
 }
 
-export function biweekWindowDays(startIso: string): string[] {
-  const start = parseIsoDate(startIso);
-  return Array.from({ length: 14 }, (_, index) => toIsoDate(addDays(start, index)));
-}
+export function isValidIsoDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return false;
+  }
 
-export function nextBiweekStart(iso: string): string {
-  return toIsoDate(addDays(parseIsoDate(iso), 14));
-}
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12) {
+    return false;
+  }
 
-export function prevBiweekStart(iso: string): string {
-  return toIsoDate(addDays(parseIsoDate(iso), -14));
-}
-
-export function initialBiweekStart(today: Date): string {
-  const mondayOffset = weekdayIndexMondayFirst(today);
-  const monday = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate() - mondayOffset,
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
   );
-  return toIsoDate(monday);
 }
 
-export function monthKeysForWindow(startIso: string): string[] {
-  const dates = biweekWindowDays(startIso).map(parseIsoDate);
-  return Array.from(new Set(dates.map(monthKey)));
+export function parseYearMonth(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})$/.exec(value);
+  if (!match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (month < 1 || month > 12) {
+    return null;
+  }
+
+  return new Date(year, month - 1, 1);
 }

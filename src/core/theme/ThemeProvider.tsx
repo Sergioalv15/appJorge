@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { Appearance } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { AppTheme, resolveTheme, ThemeMode } from '../../ui/theme';
 import { loadThemePreference, saveThemePreference } from './themePreferenceStore';
 
@@ -70,12 +70,20 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   }, [mode, setMode]);
 
   useEffect(() => {
+    // `Appearance.setColorScheme` is only implemented on native platforms.
+    if (Platform.OS === 'web') {
+      return;
+    }
+
     Appearance.setColorScheme(mode);
   }, [mode]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
-      theme: resolveTheme(mode),
+      theme: resolveTheme(
+        mode,
+        Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) ?? 'serif',
+      ),
       mode,
       isHydrated,
       setMode,

@@ -3,6 +3,7 @@ import { computeDailyProfit } from '../../domain/calculators';
 import { DailyRecord } from '../../domain/types';
 import { ValidationError } from '../../domain/errors';
 import { dailyRecordService } from '../../infrastructure/container';
+import { formatProfitPercentForForm } from './dailyRecordForm';
 
 export function useDailyRecord(date: string) {
   const [record, setRecord] = useState<DailyRecord | null>(null);
@@ -27,7 +28,7 @@ export function useDailyRecord(date: string) {
       if (result.record) {
         setTotalSold(String(result.record.totalSold));
         setAdditionalExpenses(String(result.record.additionalExpenses));
-        setProfitPercent(String(Math.round(result.record.profitPercent * 100)));
+        setProfitPercent(formatProfitPercentForForm(result.record.profitPercent));
         setNotes(result.record.notes);
         setDataphoneSales(
           result.record.dataphoneSales !== undefined ? String(result.record.dataphoneSales) : ''

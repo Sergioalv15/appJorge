@@ -1,6 +1,7 @@
-import { getDb, initializeDatabase } from '../../../core/storage/sqlite';
+import { withDatabaseAccess } from '../../../core/storage/sqlite';
 import { DailyRecordRepository } from '../application/DailyRecordRepository';
 import { DailyRecord } from '../domain/types';
+import { FIND_MOST_RECENT_DAILY_RECORD_ON_OR_BEFORE_QUERY } from './dailyRecordSql';
 
 type DailyRecordRow = {
   date: string;
@@ -24,13 +25,11 @@ function mapRow(row: DailyRecordRow): DailyRecord {
 
 export class SQLiteDailyRecordRepository implements DailyRecordRepository {
   async upsert(record: DailyRecord): Promise<void> {
-    await initializeDatabase();
-    const db = await getDb();
+    await withDatabaseAccess(async (db) => {
+      const investment = Math.round(record.totalSold * (1 - record.profitPercent) * 100) / 100;
 
-    const investment = Math.round(record.totalSold * (1 - record.profitPercent) * 100) / 100;
-
-    await db.runAsync(
-      `
+      await db.runAsync(
+        `
       INSERT INTO daily_records (date, total_sold, investment_cost, additional_expenses, profit_percent, net_profit, notes, dataphone_sales)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(date) DO UPDATE SET
@@ -41,53 +40,63 @@ export class SQLiteDailyRecordRepository implements DailyRecordRepository {
         notes = excluded.notes,
         dataphone_sales = excluded.dataphone_sales
       `,
-      [
-        record.date,
-        record.totalSold,
-        investment,
-        record.additionalExpenses,
-        record.profitPercent,
-        0,
-        record.notes,
-        record.dataphoneSales ?? 0,
-      ]
-    );
+        [
+          record.date,
+          record.totalSold,
+          investment,
+          record.additionalExpenses,
+          record.profitPercent,
+          0,
+          record.notes,
+          record.dataphoneSales ?? 0,
+        ]
+      );
+    });
   }
 
   async findByDate(date: string): Promise<DailyRecord | null> {
-    await initializeDatabase();
-    const db = await getDb();
-    const row = await db.getFirstAsync<DailyRecordRow>(
-      `SELECT date, total_sold, additional_expenses, profit_percent, notes, dataphone_sales FROM daily_records WHERE date = ?`,
-      [date]
+    const row = await withDatabaseAccess((db) =>
+      db.getFirstAsync<DailyRecordRow>(
+        `SELECT date, total_sold, additional_expenses, profit_percent, notes, dataphone_sales FROM daily_records WHERE date = ?`,
+        [date]
+      )
+    );
+
+    return row ? mapRow(row) : null;
+  }
+
+  async findMostRecentOnOrBefore(date: string): Promise<DailyRecord | null> {
+    const row = await withDatabaseAccess((db) =>
+      db.getFirstAsync<DailyRecordRow>(
+        FIND_MOST_RECENT_DAILY_RECORD_ON_OR_BEFORE_QUERY,
+        [date]
+      )
     );
 
     return row ? mapRow(row) : null;
   }
 
   async findByMonth(month: string): Promise<DailyRecord[]> {
-    await initializeDatabase();
-    const db = await getDb();
-
-    const rows = await db.getAllAsync<DailyRecordRow>(
-      `
+    const rows = await withDatabaseAccess((db) =>
+      db.getAllAsync<DailyRecordRow>(
+        `
       SELECT date, total_sold, additional_expenses, profit_percent, notes, dataphone_sales
       FROM daily_records
       WHERE substr(date, 1, 7) = ?
       ORDER BY date ASC
       `,
-      [month]
+        [month]
+      )
     );
 
     return rows.map(mapRow);
   }
 
   async sumInvestmentCost(): Promise<number> {
-    await initializeDatabase();
-    const db = await getDb();
-
-    const rows = await db.getAllAsync<{ total_sold: number; profit_percent: number }>(
-      `SELECT total_sold, profit_percent FROM daily_records`
+    const rows = await withDatabaseAccess((db) =>
+      db.getAllAsync<{ total_sold: number; profit_percent: number }>(
+        `SELECT total_sold, profit_percent FROM daily_records`
+      )
     );
 
     return rows.reduce((sum, row) => sum + row.total_sold * (1 - row.profit_percent), 0);

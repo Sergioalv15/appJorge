@@ -3,6 +3,8 @@ import { ReactNode } from 'react';
 import { formatCurrency } from '../../../../core/utils/currency';
 import { useTheme } from '../../../../core/theme/ThemeProvider';
 import { Toast } from '../../../../ui/components/Toast';
+import { LedgerRow } from '../../../../ui/components/LedgerRow';
+import { PrimaryButton } from '../../../../ui/components/PrimaryButton';
 
 interface Props {
   date: string;
@@ -28,22 +30,31 @@ interface Props {
 
 export function DailyRecordForm(props: Props) {
   const { theme } = useTheme();
+  const dateLabel = new Date(`${props.date}T00:00:00`).toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const inputStyle = {
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.md,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.inputBackground,
+  };
 
   return (
-    <View
-      style={[
-        styles.wrapper,
-        {
-          backgroundColor: theme.colors.surface,
-          borderRadius: theme.radius.lg,
-          borderColor: theme.colors.border,
-          padding: theme.spacing.md,
-          gap: theme.spacing.sm,
-        },
-      ]}
-    >
-      <Text style={[styles.title, { color: theme.colors.text }]}>Registro del día</Text>
-      <Text style={[styles.date, { color: theme.colors.mutedText }]}>{props.date}</Text>
+    <View style={styles.wrapper}>
+      <Text
+        style={[
+          styles.date,
+          { color: theme.colors.text, fontFamily: theme.typography.serifFamily },
+        ]}
+      >
+        {dateLabel}
+      </Text>
 
       <Field label="Total vendido (€)" labelId="total-sold-label">
         <TextInput
@@ -56,16 +67,7 @@ export function DailyRecordForm(props: Props) {
           placeholder="0"
           placeholderTextColor={theme.colors.mutedText}
           selectionColor={theme.colors.primary}
-          style={[
-            styles.input,
-            {
-              borderColor: theme.colors.border,
-              borderRadius: theme.radius.md,
-              paddingHorizontal: theme.spacing.sm,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.inputBackground,
-            },
-          ]}
+          style={[styles.input, inputStyle]}
         />
       </Field>
 
@@ -80,19 +82,10 @@ export function DailyRecordForm(props: Props) {
           placeholder="0"
           placeholderTextColor={theme.colors.mutedText}
           selectionColor={theme.colors.primary}
-          style={[
-            styles.input,
-            {
-              borderColor: theme.colors.border,
-              borderRadius: theme.radius.md,
-              paddingHorizontal: theme.spacing.sm,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.inputBackground,
-            },
-          ]}
+          style={[styles.input, inputStyle]}
         />
         <Text style={[styles.fieldHint, { color: theme.colors.mutedText }]}>
-          Solo registro informativo, no afecta los cálculos
+          Solo registro informativo; no se suma de nuevo a las ventas.
         </Text>
       </Field>
 
@@ -107,32 +100,14 @@ export function DailyRecordForm(props: Props) {
           placeholder="30"
           placeholderTextColor={theme.colors.mutedText}
           selectionColor={theme.colors.primary}
-          style={[
-            styles.input,
-            {
-              borderColor: theme.colors.border,
-              borderRadius: theme.radius.md,
-              paddingHorizontal: theme.spacing.sm,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.inputBackground,
-            },
-          ]}
+          style={[styles.input, inputStyle]}
         />
       </Field>
 
       <Field label="Destinar a inversión (€)" labelId="investment-cost-label">
         <Text
           nativeID="investment-cost-label"
-          style={[
-            styles.investmentValue,
-            {
-              borderColor: theme.colors.border,
-              borderRadius: theme.radius.md,
-              paddingHorizontal: theme.spacing.sm,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.inputBackground,
-            },
-          ]}
+          style={[styles.computedValue, inputStyle]}
         >
           {formatCurrency(props.investment)}
         </Text>
@@ -149,16 +124,7 @@ export function DailyRecordForm(props: Props) {
           placeholder="0"
           placeholderTextColor={theme.colors.mutedText}
           selectionColor={theme.colors.primary}
-          style={[
-            styles.input,
-            {
-              borderColor: theme.colors.border,
-              borderRadius: theme.radius.md,
-              paddingHorizontal: theme.spacing.sm,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.inputBackground,
-            },
-          ]}
+          style={[styles.input, inputStyle]}
         />
       </Field>
 
@@ -167,17 +133,7 @@ export function DailyRecordForm(props: Props) {
           accessibilityLabelledBy="notes-label"
           accessibilityLabel="Notas del día"
           accessibilityHint="Agregá observaciones opcionales del día"
-          style={[
-            styles.input,
-            styles.notes,
-            {
-              borderColor: theme.colors.border,
-              borderRadius: theme.radius.md,
-              paddingHorizontal: theme.spacing.sm,
-              color: theme.colors.text,
-              backgroundColor: theme.colors.inputBackground,
-            },
-          ]}
+          style={[styles.input, styles.notes, inputStyle]}
           multiline
           value={props.notes}
           onChangeText={props.onNotesChange}
@@ -187,30 +143,21 @@ export function DailyRecordForm(props: Props) {
         />
       </Field>
 
-      <View
-        style={[
-          styles.profitCard,
-          {
-            borderColor: theme.colors.border,
-            borderRadius: theme.radius.md,
-            padding: theme.spacing.sm,
-            backgroundColor: theme.colors.card,
-          },
-        ]}
-      >
-        <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>Beneficio bruto</Text>
-        <Text style={[styles.profitValue, { color: theme.colors.text }]}>{formatCurrency(props.grossProfit)}</Text>
-        <Text style={[styles.profitLabel, { color: theme.colors.mutedText }]}>
-          {props.netProfit < 0 ? 'Pérdida neta (calculada)' : 'Beneficio neto (calculado)'}
-        </Text>
+      <View style={styles.calculations}>
         <Text
           style={[
-            styles.profitValue,
-            { color: props.netProfit < 0 ? theme.colors.danger : theme.colors.success },
+            styles.sectionTitle,
+            { color: theme.colors.text, fontFamily: theme.typography.serifFamily },
           ]}
         >
-          {formatCurrency(props.netProfit)}
+          Vista previa
         </Text>
+        <LedgerRow label="Beneficio bruto" value={formatCurrency(props.grossProfit)} />
+        <LedgerRow
+          label={props.netProfit < 0 ? 'Pérdida neta' : 'Beneficio neto'}
+          value={formatCurrency(props.netProfit)}
+          valueColor={props.netProfit < 0 ? theme.colors.danger : theme.colors.text}
+        />
       </View>
 
       {props.error ? (
@@ -223,50 +170,19 @@ export function DailyRecordForm(props: Props) {
         </Text>
       ) : null}
 
-      {props.notice ? (
-        <View style={styles.saveArea}>
+      <View style={styles.saveArea}>
+        {props.notice ? (
           <View style={styles.toastOverlay}>
             <Toast message={props.notice} onHide={props.onNoticeHide} />
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Guardar registro del día"
-            accessibilityHint="Guarda los valores cargados del día actual"
-            accessibilityState={{ disabled: props.saving, busy: props.saving }}
-            style={[
-              styles.button,
-              {
-                backgroundColor: theme.colors.primary,
-                borderRadius: theme.radius.md,
-              },
-              props.saving && styles.buttonDisabled,
-            ]}
-            disabled={props.saving}
-            onPress={props.onSave}
-          >
-            <Text style={styles.buttonText}>{props.saving ? 'Guardando...' : 'Guardar día'}</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <Pressable
-          accessibilityRole="button"
+        ) : null}
+        <PrimaryButton
           accessibilityLabel="Guardar registro del día"
-          accessibilityHint="Guarda los valores cargados del día actual"
-          accessibilityState={{ disabled: props.saving, busy: props.saving }}
-          style={[
-            styles.button,
-            {
-              backgroundColor: theme.colors.primary,
-              borderRadius: theme.radius.md,
-            },
-            props.saving && styles.buttonDisabled,
-          ]}
-          disabled={props.saving}
+          title={props.saving ? 'Guardando...' : 'Guardar día'}
+          busy={props.saving}
           onPress={props.onSave}
-        >
-          <Text style={styles.buttonText}>{props.saving ? 'Guardando...' : 'Guardar día'}</Text>
-        </Pressable>
-      )}
+        />
+      </View>
     </View>
   );
 }
@@ -286,65 +202,49 @@ function Field({ label, labelId, children }: { label: string; labelId: string; c
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderWidth: 1,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
+    gap: 16,
   },
   date: {
-    fontSize: 13,
+    fontSize: 22,
+    lineHeight: 30,
+    textTransform: 'capitalize',
   },
   field: {
     gap: 6,
   },
   fieldLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   fieldHint: {
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 18,
   },
   input: {
+    minHeight: 48,
     borderWidth: 1,
     paddingVertical: 10,
     fontSize: 16,
   },
-  investmentValue: {
+  computedValue: {
+    minHeight: 48,
     borderWidth: 1,
-    paddingVertical: 11,
+    paddingVertical: 12,
     fontSize: 16,
-    fontWeight: '600',
   },
   notes: {
-    minHeight: 86,
+    minHeight: 88,
     textAlignVertical: 'top',
   },
-  profitCard: {
-    borderWidth: 1,
-    gap: 4,
+  calculations: {
+    marginTop: 4,
   },
-  profitLabel: {
-    fontSize: 12,
-  },
-  profitValue: {
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-  },
-  button: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.65,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
   },
   saveArea: {
     position: 'relative',
+    marginTop: 4,
   },
   toastOverlay: {
     position: 'absolute',
@@ -355,9 +255,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   error: {
-    fontSize: 13,
-  },
-  notice: {
-    fontSize: 13,
+    fontSize: 14,
   },
 });

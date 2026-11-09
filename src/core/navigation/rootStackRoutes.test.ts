@@ -2,20 +2,18 @@ import { describe, expect, it } from "vitest";
 import { rootStackRoutes } from "./rootStackRoutes";
 
 describe("rootStackRoutes", () => {
-  it("sets drawer as the default root shell", () => {
+  it("uses the sales tabs as the default app shell", () => {
     expect(rootStackRoutes[0]).toEqual({
       name: "(drawer)",
       options: { headerShown: false },
     });
   });
 
-  it("keeps day date route outside drawer with stack header", () => {
-    expect(rootStackRoutes).toContainEqual({
-      name: "day/[date]",
-      options: {
-        headerShown: true,
-        title: "Registro del dia",
-      },
-    });
+  it("retains supplier forms for use from Logistics", () => {
+    expect(rootStackRoutes.map((route) => route.name)).toEqual([
+      '(drawer)',
+      'supplier/new',
+      'supplier/[id]',
+    ]);
   });
 });

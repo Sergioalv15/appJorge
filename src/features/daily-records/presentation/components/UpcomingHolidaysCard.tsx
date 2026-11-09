@@ -1,51 +1,69 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../../core/theme/ThemeProvider';
+import { formatSpanishShortDate, parseIsoDate } from '../../../../core/utils/date';
 import { useUpcomingHolidays } from '../../../holidays/presentation/hooks/useUpcomingHolidays';
-
-function formatHolidayDate(date: string): string {
-  const d = new Date(`${date}T00:00:00`);
-  return d.toLocaleDateString('es-ES', { day: 'numeric', weekday: 'short', month: 'short' });
-}
 
 export function UpcomingHolidaysCard() {
   const { theme } = useTheme();
   const router = useRouter();
-  const { loading, holidays } = useUpcomingHolidays(14, 3);
-
-  if (loading || holidays.length === 0) {
-    return null;
-  }
+  const { loading, holidays, error, refresh } = useUpcomingHolidays(null, 1);
+  const nextHoliday = holidays[0];
 
   return (
     <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-          borderRadius: theme.radius.lg,
-        },
-      ]}
+      accessibilityLiveRegion="polite"
+      style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
     >
-      <Text style={[styles.title, { color: theme.colors.text }]}>Próximos festivos</Text>
-      {holidays.map((holiday) => (
-        <View key={holiday.date} style={styles.row}>
-          <Text style={[styles.dot, { color: theme.colors.primary }]}>●</Text>
-          <Text style={[styles.holidayName, { color: theme.colors.text }]}>{holiday.name}</Text>
-          <Text style={[styles.holidayDate, { color: theme.colors.mutedText }]}>
-            {formatHolidayDate(holiday.date)}{holiday.daysUntil <= 1 ? '' : ` (en ${holiday.daysUntil}d)`}
+      <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.typography.serifFamily }]}>Próximos festivos</Text>
+
+      {loading ? (
+        <Text style={[styles.stateText, { color: theme.colors.mutedText }]}>Cargando festivos...</Text>
+      ) : !nextHoliday ? (
+        <View style={styles.stateRow}>
+          <Text accessibilityRole={error ? 'alert' : undefined} style={[styles.stateText, { color: error ? theme.colors.danger : theme.colors.mutedText }]}>
+            {error ? 'No se pudieron cargar los festivos.' : 'No hay festivos nacionales en el calendario disponible.'}
           </Text>
+          {error ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Reintentar cargar festivos"
+              onPress={() => void refresh()}
+              style={styles.action}
+            >
+              <Text style={[styles.link, { color: theme.colors.primary }]}>Reintentar</Text>
+            </Pressable>
+          ) : null}
         </View>
-      ))}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Ver calendario completo"
-        style={({ pressed }) => [pressed ? styles.linkPressed : null]}
-        onPress={() => router.push('/calendar' as never)}
-      >
-        <Text style={[styles.link, { color: theme.colors.primary }]}>Ver todo →</Text>
-      </Pressable>
+      ) : (
+        <>
+          {error ? (
+            <View style={styles.stateRow}>
+              <Text accessibilityRole="alert" style={[styles.warning, { color: theme.colors.danger }]}>No se pudo actualizar; se muestra el último dato guardado.</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reintentar actualizar festivos"
+                onPress={() => void refresh()}
+                style={styles.action}
+              >
+                <Text style={[styles.link, { color: theme.colors.primary }]}>Reintentar</Text>
+              </Pressable>
+            </View>
+          ) : null}
+          <Text style={[styles.holidayName, { color: theme.colors.investment }]}>{nextHoliday.name}</Text>
+          <Text style={[styles.holidayDate, { color: theme.colors.text }]}>
+            {formatSpanishShortDate(parseIsoDate(nextHoliday.date))}{nextHoliday.daysUntil <= 1 ? '' : ` · En ${nextHoliday.daysUntil} días`}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ver calendario completo"
+            style={({ pressed }) => [styles.action, pressed ? styles.linkPressed : null]}
+            onPress={() => router.push('/calendar' as never)}
+          >
+            <Text style={[styles.link, { color: theme.colors.primary }]}>Ver calendario →</Text>
+          </Pressable>
+        </>
+      )}
     </View>
   );
 }
@@ -53,35 +71,50 @@ export function UpcomingHolidaysCard() {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    padding: 14,
-    gap: 8,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 6,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dot: {
-    fontSize: 6,
+    fontSize: 21,
+    lineHeight: 28,
   },
   holidayName: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 19,
+    lineHeight: 25,
+    fontWeight: '700',
   },
   holidayDate: {
+    fontSize: 14,
+    lineHeight: 20,
+    textTransform: 'capitalize',
+  },
+  stateText: {
+    flex: 1,
     fontSize: 13,
   },
+  warning: {
+    flex: 1,
+    fontSize: 12,
+  },
+  stateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   link: {
+    minHeight: 40,
+    textAlignVertical: 'center',
     fontSize: 13,
     fontWeight: '600',
-    marginTop: 4,
   },
   linkPressed: {
     opacity: 0.6,
+  },
+  action: {
+    minHeight: 40,
+    justifyContent: 'center',
   },
 });

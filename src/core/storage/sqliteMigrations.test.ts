@@ -71,10 +71,13 @@ describe('runMigrations', () => {
     expect(db.executedSql).toContain('PRAGMA user_version = 6;');
     expect(db.executedSql).toContain('PRAGMA user_version = 7;');
     expect(db.executedSql).toContain('PRAGMA user_version = 8;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 9;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 10;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 11;');
   });
 
   it('skips migrations when user_version is up to date', async () => {
-    const db = new FakeDb(8);
+    const db = new FakeDb(11);
 
     await runMigrations(db);
 
@@ -94,6 +97,9 @@ describe('runMigrations', () => {
     expect(db.executedSql).toContain('PRAGMA user_version = 6;');
     expect(db.executedSql).toContain('PRAGMA user_version = 7;');
     expect(db.executedSql).toContain('PRAGMA user_version = 8;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 9;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 10;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 11;');
     expect(db.executedSql.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS daily_records'))).toBe(false);
   });
 
@@ -185,5 +191,29 @@ describe('runMigrations', () => {
     expect(db.executedSql).toContain('PRAGMA user_version = 8;');
     expect(db.executedSql.some((sql) => sql.toLowerCase().includes('add column supplier_id'))).toBe(false);
     expect(db.executedSql.some((sql) => sql.toLowerCase().includes("add column type text"))).toBe(false);
+  });
+
+  it('v10 creates the store catalog, sales, stock movement tables and default categories', async () => {
+    const db = new FakeDb(9);
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 10;');
+    const migrationSql = db.executedSql.find((sql) => sql.includes('CREATE TABLE IF NOT EXISTS store_categories'));
+    expect(migrationSql).toContain('CREATE TABLE IF NOT EXISTS store_price_groups');
+    expect(migrationSql).toContain('CREATE TABLE IF NOT EXISTS store_sales');
+    expect(migrationSql).toContain('CREATE TABLE IF NOT EXISTS store_sale_items');
+    expect(migrationSql).toContain('CREATE TABLE IF NOT EXISTS store_stock_movements');
+    expect(migrationSql).toContain("('Anillos', 0)");
+    expect(migrationSql).toContain("('Pendientes', 3)");
+  });
+
+  it('v11 adds one representative photo per price group', async () => {
+    const db = new FakeDb(10);
+
+    await runMigrations(db);
+
+    expect(db.executedSql).toContain('PRAGMA user_version = 11;');
+    expect(db.executedSql.some((sql) => sql.includes('ADD COLUMN photo_data_url TEXT'))).toBe(true);
   });
 });

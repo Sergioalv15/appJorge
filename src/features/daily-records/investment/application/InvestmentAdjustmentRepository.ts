@@ -1,4 +1,9 @@
-import { InvestmentAdjustment, InvestmentHistoryItem, InvestmentType } from '../domain/types';
+import {
+  InvestmentAdjustment,
+  InvestmentHistoryPage,
+  InvestmentHistoryPageRequest,
+  InvestmentType,
+} from '../domain/types';
 
 export interface AddInvestmentAdjustmentInput {
   date: string;
@@ -11,7 +16,7 @@ export interface AddInvestmentAdjustmentInput {
 export interface InvestmentAdjustmentRepository {
   add(input: AddInvestmentAdjustmentInput): Promise<InvestmentAdjustment>;
   listAll(types?: InvestmentType[]): Promise<InvestmentAdjustment[]>;
-  listHistory(): Promise<InvestmentHistoryItem[]>;
+  listHistoryPage(request: InvestmentHistoryPageRequest): Promise<InvestmentHistoryPage>;
   sumAmount(): Promise<number>;
   sumPurchases(): Promise<number>;
 }

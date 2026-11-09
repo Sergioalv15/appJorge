@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { formatCurrency } from '../../../../../core/utils/currency';
+import { toIsoDate } from '../../../../../core/utils/date';
 import { useTheme } from '../../../../../core/theme/ThemeProvider';
+import { LedgerRow } from '../../../../../ui/components/LedgerRow';
+import { parseManualCapitalAddition } from './manualAdjustmentAmount';
 import {
   InvestmentPurchaseButton,
   InvestmentPurchaseModal,
@@ -22,6 +28,7 @@ interface Props {
   loading: boolean;
   adding: boolean;
   error: string | null;
+  actionError?: string | null;
   onAddAdjustment: (input: { date: string; amount: number; note: string }) => Promise<boolean>;
   onAddPurchase: (input: {
     date: string;
@@ -40,6 +47,7 @@ export function InvestmentBalanceCard({
   loading,
   adding,
   error,
+  actionError,
   onAddAdjustment,
   onAddPurchase,
   onRefresh,
@@ -48,8 +56,10 @@ export function InvestmentBalanceCard({
   const [modalVisible, setModalVisible] = useState(false);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
-  const [isWithdrawal, setIsWithdrawal] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [purchaseVisible, setPurchaseVisible] = useState(false);
+  const [purchaseDate, setPurchaseDate] = useState(() => toIsoDate(new Date()));
+  const [adjustmentDate, setAdjustmentDate] = useState(() => toIsoDate(new Date()));
 
   const handlePurchaseSubmit = async (input: {
     date: string;
@@ -69,25 +79,26 @@ export function InvestmentBalanceCard({
   const openModal = () => {
     setAmount('');
     setNote('');
-    setIsWithdrawal(false);
+    setValidationError(null);
+    setAdjustmentDate(toIsoDate(new Date()));
     setModalVisible(true);
   };
 
+  const openPurchase = () => {
+    setPurchaseDate(toIsoDate(new Date()));
+    setPurchaseVisible(true);
+  };
+
   const handleSave = async () => {
-    const parsed = Number(amount.replace(',', '.')) || 0;
-    if (parsed === 0) {
+    const parsed = parseManualCapitalAddition(amount);
+    if (parsed === null) {
+      setValidationError('Introduce un importe mayor que cero para agregar capital.');
       return;
     }
 
-    const signedAmount = isWithdrawal ? -Math.abs(parsed) : Math.abs(parsed);
-    const today = new Date();
-    const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
-      today.getDate()
-    ).padStart(2, '0')}`;
-
     const ok = await onAddAdjustment({
-      date,
-      amount: signedAmount,
+      date: adjustmentDate,
+      amount: Math.abs(parsed),
       note: note.trim(),
     });
 
@@ -96,80 +107,75 @@ export function InvestmentBalanceCard({
     }
   };
 
-  const formattedAvailable = loading ? '...' : formatCurrency(available);
+  const formattedAvailable = error
+    ? 'No disponible'
+    : loading
+      ? '…'
+      : formatCurrency(available);
+  const availableValueColor = error || loading
+    ? theme.colors.mutedText
+    : available < 0
+      ? theme.colors.danger
+      : theme.colors.investment;
+  const formattedBreakdown = (value: number) =>
+    error ? 'No disponible' : loading ? '…' : formatCurrency(value);
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.colors.surface,
-          borderRadius: theme.radius.md,
-          borderColor: theme.colors.border,
-          padding: theme.spacing.md,
-        },
-      ]}
-    >
-      <Text style={[styles.title, { color: theme.colors.text }]}>Capital para invertir</Text>
-      <Text style={[styles.value, { color: theme.colors.success }]}>{formattedAvailable}</Text>
+      <View style={styles.card}>
+      <Text style={[styles.availableLabel, { color: theme.colors.mutedText }]}>Disponible</Text>
+      <Text
+        accessibilityLabel={`Capital disponible, ${formattedAvailable}`}
+        style={[styles.value, { color: availableValueColor, fontFamily: theme.typography.serifFamily }]}
+      >
+        {formattedAvailable}
+      </Text>
 
       <View style={styles.breakdown}>
-        <Text style={[styles.breakdownItem, { color: theme.colors.mutedText }]}>
-          Invertido en entradas: {loading ? '...' : formatCurrency(investedTotal)}
-        </Text>
-        <Text style={[styles.breakdownItem, { color: theme.colors.mutedText }]}>
-          Ajustes manuales: {loading ? '...' : formatCurrency(adjustmentsTotal)}
-        </Text>
-        <Text style={[styles.breakdownItem, { color: theme.colors.mutedText }]}>
-          Invertido en compras: {loading ? '...' : formatCurrency(-purchasesTotal)}
-        </Text>
+        <LedgerRow label="Destinado desde las entradas" value={formattedBreakdown(investedTotal)} />
+        <LedgerRow label="Ajustes manuales" value={formattedBreakdown(adjustmentsTotal)} />
+        <LedgerRow label="Compras a proveedores" value={formattedBreakdown(-purchasesTotal)} />
       </View>
 
       {error ? (
-        <Text
-          accessibilityRole="alert"
-          accessibilityLiveRegion="polite"
-          style={[styles.error, { color: theme.colors.danger }]}
-        >
-          {error}
+        <View style={styles.errorRow}>
+          <Text
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+            style={[styles.error, { color: theme.colors.danger }]}
+          >
+            {error}
+          </Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Reintentar cargar capital" onPress={onRefresh} style={styles.retryButton}>
+            <Text style={[styles.retryText, { color: theme.colors.primary }]}>Reintentar</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {actionError ? (
+        <Text accessibilityRole="alert" style={[styles.error, { color: theme.colors.danger }]}>
+          {actionError}
         </Text>
       ) : null}
 
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Agregar capital manualmente"
+          accessibilityLabel="Ajustar capital hoy"
           style={({ pressed }) => [
             styles.button,
             {
-              backgroundColor: theme.colors.primary,
-              borderRadius: theme.radius.md,
+                backgroundColor: theme.colors.primary,
+                borderRadius: theme.radius.sm,
             },
             pressed ? styles.buttonPressed : null,
           ]}
           onPress={openModal}
         >
-          <Text style={styles.buttonText}>Agregar / Ajustar</Text>
+          <Text style={[styles.buttonText, { color: theme.colors.onPrimary }]}>Ajustar hoy</Text>
         </Pressable>
         <InvestmentPurchaseButton
           adding={adding}
-          onPress={() => setPurchaseVisible(true)}
+          onPress={openPurchase}
         />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Recargar capital para invertir"
-          style={({ pressed }) => [
-            styles.iconButton,
-            {
-              borderColor: theme.colors.border,
-              borderRadius: theme.radius.md,
-            },
-            pressed ? styles.buttonPressed : null,
-          ]}
-          onPress={onRefresh}
-        >
-          <Text style={[styles.iconButtonText, { color: theme.colors.primary }]}>↻</Text>
-        </Pressable>
       </View>
 
       <Modal
@@ -178,7 +184,14 @@ export function InvestmentBalanceCard({
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <ScrollView
+            contentContainerStyle={styles.modalScroll}
+            keyboardShouldPersistTaps="handled"
+          >
           <View
             style={[
               styles.modalContent,
@@ -189,55 +202,20 @@ export function InvestmentBalanceCard({
               },
             ]}
           >
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Ajustar capital</Text>
-
-            <View style={styles.segmented}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: !isWithdrawal }}
-                style={[
-                  styles.segment,
-                  { borderRadius: theme.radius.sm },
-                  !isWithdrawal ? { backgroundColor: theme.colors.primary } : null,
-                ]}
-                onPress={() => setIsWithdrawal(false)}
-              >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    { color: !isWithdrawal ? '#FFFFFF' : theme.colors.mutedText },
-                  ]}
-                >
-                  Sumar
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: isWithdrawal }}
-                style={[
-                  styles.segment,
-                  { borderRadius: theme.radius.sm },
-                  isWithdrawal ? { backgroundColor: theme.colors.danger } : null,
-                ]}
-                onPress={() => setIsWithdrawal(true)}
-              >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    { color: isWithdrawal ? '#FFFFFF' : theme.colors.mutedText },
-                  ]}
-                >
-                  Retirar
-                </Text>
-              </Pressable>
-            </View>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Ajustar capital hoy</Text>
+            <Text style={[styles.modalHint, { color: theme.colors.mutedText }]}>
+              {`Fecha del movimiento: ${new Date(`${adjustmentDate}T00:00:00`).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+            </Text>
 
             <TextInput
               accessibilityLabel="Monto del ajuste en euros"
-              accessibilityHint={isWithdrawal ? 'Monto a retirar' : 'Monto a sumar'}
+              accessibilityHint="Monto a agregar al capital"
               keyboardType="decimal-pad"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={(value) => {
+                setAmount(value);
+                setValidationError(null);
+              }}
               placeholder="0"
               placeholderTextColor={theme.colors.mutedText}
               selectionColor={theme.colors.primary}
@@ -251,6 +229,11 @@ export function InvestmentBalanceCard({
                 },
               ]}
             />
+            {validationError ? (
+              <Text accessibilityRole="alert" style={[styles.error, { color: theme.colors.danger }]}>
+                {validationError}
+              </Text>
+            ) : null}
             <TextInput
               accessibilityLabel="Nota del ajuste"
               value={note}
@@ -300,18 +283,21 @@ export function InvestmentBalanceCard({
                 disabled={adding}
                 onPress={() => void handleSave()}
               >
-                <Text style={styles.modalButtonTextPrimary}>
+      <Text style={[styles.modalButtonTextPrimary, { color: theme.colors.onPrimary }]}>
                   {adding ? 'Guardando...' : 'Guardar'}
                 </Text>
               </Pressable>
             </View>
           </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       <InvestmentPurchaseModal
         visible={purchaseVisible}
         saving={adding}
+        defaultDate={purchaseDate}
+        title="Agregar inversión hoy"
         onClose={() => setPurchaseVisible(false)}
         onSubmit={handlePurchaseSubmit}
       />
@@ -321,61 +307,66 @@ export function InvestmentBalanceCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    gap: 6,
+    gap: 0,
   },
-  title: {
-    fontSize: 14,
-    fontWeight: '700',
+  availableLabel: {
+    fontSize: 13,
   },
   value: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: 34,
+    lineHeight: 42,
   },
   breakdown: {
-    gap: 2,
-  },
-  breakdownItem: {
-    fontSize: 12,
+    marginTop: 4,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4,
+    marginTop: 12,
   },
   button: {
     flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  iconButton: {
-    width: 42,
-    height: 42,
-    borderWidth: 1,
+    minHeight: 48,
+    paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconButtonText: {
-    fontSize: 20,
+  buttonText: {
     fontWeight: '700',
+    fontSize: 13,
+    textAlign: 'center',
   },
   buttonPressed: {
     opacity: 0.65,
   },
   error: {
     fontSize: 13,
+    flex: 1,
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  retryButton: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  retryText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     padding: 24,
+  },
+  modalScroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   modalContent: {
     gap: 12,
@@ -384,18 +375,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  segmented: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  segmentText: {
-    fontWeight: '700',
-    fontSize: 14,
+  modalHint: {
+    fontSize: 13,
+    textTransform: 'capitalize',
   },
   input: {
     borderWidth: 1,
@@ -411,15 +393,16 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
     borderWidth: 1,
+    minHeight: 48,
     paddingVertical: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalButtonText: {
     fontWeight: '700',
     fontSize: 14,
   },
   modalButtonTextPrimary: {
-    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 14,
   },

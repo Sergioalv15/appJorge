@@ -1,65 +1,83 @@
 export type ThemeMode = 'light' | 'dark';
 
 const spacing = {
-  xs: 6,
-  sm: 10,
+  xs: 4,
+  sm: 8,
+  compact: 12,
   md: 16,
   lg: 24,
   xl: 32,
 } as const;
 
 const radius = {
-  sm: 8,
-  md: 12,
-  lg: 18,
+  sm: 4,
+  md: 6,
+  lg: 8,
 } as const;
 
+const typography = {
+  serifFamily: 'serif',
+  pageHeading: 32,
+  primaryTotal: 34,
+  sectionHeading: 18,
+  body: 15,
+  supporting: 12,
+} as const;
+
+type AppTypography = Omit<typeof typography, 'serifFamily'> & { serifFamily: string };
+
 const lightColors = {
-  background: '#F5EFE6',
-  surface: '#FFFDF8',
-  card: '#F1E4D1',
-  primary: '#5B3A29',
-  primarySoft: '#8C6143',
-  text: '#1F1B18',
-  mutedText: '#6B6158',
-  border: '#D5C4AD',
-  success: '#264D2F',
-  danger: '#8B2E2E',
+  background: '#FAF5EB',
+  surface: '#FFFCF6',
+  card: '#F0E4D2',
+  primary: '#85492F',
+  primarySoft: '#A35E3B',
+  onPrimary: '#FFF9EF',
+  text: '#382E24',
+  mutedText: '#77624F',
+  border: '#E2D6C3',
+  success: '#476747',
+  danger: '#A24032',
+  sales: '#2F638D',
+  investment: '#865D22',
   white: '#FFFFFF',
   black: '#111111',
-  inputBackground: '#FFFFFF',
-  drawerOverlay: 'rgba(17,17,17,0.2)',
-  calendarBackground: '#FBF7F0',
-  calendarSurface: '#FFFDF8',
-  calendarText: '#1F1B18',
-  calendarMutedText: '#6B6158',
-  calendarBorder: 'rgba(91,58,41,0.22)',
-  calendarHighlight: 'rgba(110,110,110,0.28)',
-  calendarLoadingOverlay: 'rgba(245,239,230,0.86)',
+  inputBackground: '#FFFCF6',
+  drawerOverlay: 'rgba(56,46,36,0.2)',
+  calendarBackground: '#FAF5EB',
+  calendarSurface: '#FFFCF6',
+  calendarText: '#382E24',
+  calendarMutedText: '#77624F',
+  calendarBorder: '#E2D6C3',
+  calendarHighlight: 'rgba(133,73,47,0.18)',
+  calendarLoadingOverlay: 'rgba(250,245,235,0.9)',
 } as const;
 
 const darkColors = {
-  background: '#111111',
-  surface: '#1A1A1A',
-  card: '#242424',
-  primary: '#D8A07A',
-  primarySoft: '#B8855F',
-  text: '#F5EEE7',
-  mutedText: '#B9AFA4',
-  border: '#3D342E',
-  success: '#7BD18E',
-  danger: '#F08C8C',
+  background: '#27231C',
+  surface: '#302B23',
+  card: '#3B3024',
+  primary: '#E9B896',
+  primarySoft: '#C89170',
+  onPrimary: '#382315',
+  text: '#F5ECDC',
+  mutedText: '#C7B69E',
+  border: '#4E4436',
+  success: '#A7C7A2',
+  danger: '#E39B91',
+  sales: '#A3CCEF',
+  investment: '#E7C085',
   white: '#FFFFFF',
   black: '#111111',
-  inputBackground: '#1F1F1F',
+  inputBackground: '#302B23',
   drawerOverlay: 'rgba(0,0,0,0.45)',
-  calendarBackground: '#080808',
-  calendarSurface: '#121212',
-  calendarText: 'rgba(255,255,255,0.95)',
-  calendarMutedText: 'rgba(255,255,255,0.56)',
-  calendarBorder: 'rgba(255,255,255,0.16)',
-  calendarHighlight: 'rgba(176,176,176,0.42)',
-  calendarLoadingOverlay: 'rgba(8,8,8,0.85)',
+  calendarBackground: '#27231C',
+  calendarSurface: '#302B23',
+  calendarText: '#F5ECDC',
+  calendarMutedText: '#C7B69E',
+  calendarBorder: '#4E4436',
+  calendarHighlight: 'rgba(233,184,150,0.2)',
+  calendarLoadingOverlay: 'rgba(39,35,28,0.9)',
 } as const;
 
 export type ThemeColorKey = keyof typeof lightColors;
@@ -71,13 +89,14 @@ export type AppTheme = {
   colors: ThemeColors;
   spacing: typeof spacing;
   radius: typeof radius;
+  typography: AppTypography;
 };
 
 export function normalizeThemePreference(value: string | null | undefined): ThemeMode {
   return value === 'dark' ? 'dark' : 'light';
 }
 
-export function resolveTheme(mode: ThemeMode): AppTheme {
+export function resolveTheme(mode: ThemeMode, serifFamily: string = typography.serifFamily): AppTheme {
   const colors = mode === 'dark' ? darkColors : lightColors;
 
   return {
@@ -86,6 +105,7 @@ export function resolveTheme(mode: ThemeMode): AppTheme {
     colors,
     spacing,
     radius,
+    typography: { ...typography, serifFamily },
   };
 }
 

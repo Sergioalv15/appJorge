@@ -1,17 +1,13 @@
 {
   "expo": {
-    "name": "Modas Nicolas",
+    "name": "Susu's Boutique",
     "slug": "appjorge",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "appjorge",
     "userInterfaceStyle": "light",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "experiments": {
       "typedRoutes": true
     },
@@ -24,7 +20,16 @@
           "supportsOpeningDocumentsInPlace": true
         }
       ],
-      "expo-document-picker"
+      "expo-document-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Susu’s Boutique necesita acceso a tus fotos para guardar una imagen de referencia del grupo de precio.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      "expo-secure-store"
     ],
     "android": {
       "package": "com.appjorge.mobile",

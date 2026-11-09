@@ -1,49 +1,104 @@
-import { PropsWithChildren } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
+import { PropsWithChildren, useContext } from 'react';
+import {
+  KeyboardAvoidingView,
+  PixelRatio,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  ViewStyle,
+} from 'react-native';
+import { Edge, SafeAreaView } from 'react-native-safe-area-context';
+import { HeaderHeightContext } from '@react-navigation/elements';
 import { useTheme } from '../../core/theme/ThemeProvider';
 
 type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
   contentContainerStyle?: ViewStyle;
+  topInset?: boolean;
+  bottomInset?: boolean;
+  keyboardAware?: boolean;
 }>;
 
-export function Screen({ children, scroll = true, contentContainerStyle }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = true,
+  contentContainerStyle,
+  topInset = false,
+  bottomInset = true,
+  keyboardAware = false,
+}: ScreenProps) {
   const { theme } = useTheme();
+  const headerHeight = useContext(HeaderHeightContext) ?? 0;
+  // Native-stack reports the Android header origin in px; KeyboardAvoidingView expects dp.
+  const keyboardVerticalOffset =
+    Platform.OS === 'android' ? headerHeight / PixelRatio.get() : headerHeight;
+  const { width } = useWindowDimensions();
+  const safeAreaEdges: Edge[] = [
+    ...(topInset ? ['top' as const] : []),
+    'left',
+    'right',
+    ...(bottomInset ? ['bottom' as const] : []),
+  ];
+  const horizontalPadding = Math.min(
+    theme.spacing.lg,
+    Math.max(theme.spacing.md, width * 0.06),
+  );
+  const contentStyle = [
+    styles.container,
+    {
+      paddingHorizontal: horizontalPadding,
+      paddingVertical: theme.spacing.md,
+      gap: theme.spacing.md,
+    },
+    contentContainerStyle,
+  ];
 
   if (scroll) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
-        <ScrollView
-          contentContainerStyle={[
-            styles.container,
-            { padding: theme.spacing.md, gap: theme.spacing.md },
-            contentContainerStyle,
-          ]}
-          keyboardShouldPersistTaps="handled"
+      <SafeAreaView
+        edges={safeAreaEdges}
+        style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+      >
+        <KeyboardAvoidingView
+          style={styles.fill}
+          behavior={keyboardAware ? (Platform.OS === 'ios' ? 'padding' : 'height') : undefined}
+          keyboardVerticalOffset={keyboardVerticalOffset}
         >
-          {children}
-        </ScrollView>
+          <ScrollView
+            contentContainerStyle={contentStyle}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={keyboardAware ? 'none' : 'on-drag'}
+          >
+            {children}
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
-      <View
-        style={[
-          styles.container,
-          { padding: theme.spacing.md, gap: theme.spacing.md },
-          contentContainerStyle,
-        ]}
+    <SafeAreaView
+      edges={safeAreaEdges}
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+    >
+      <KeyboardAvoidingView
+        style={styles.fill}
+        behavior={keyboardAware ? (Platform.OS === 'ios' ? 'padding' : 'height') : undefined}
+        keyboardVerticalOffset={keyboardVerticalOffset}
       >
-        {children}
-      </View>
+        <View style={contentStyle}>{children}</View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
+  },
+  fill: {
     flex: 1,
   },
   container: {},

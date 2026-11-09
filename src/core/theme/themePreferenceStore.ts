@@ -1,7 +1,8 @@
 import Storage from 'expo-sqlite/kv-store';
 import { normalizeThemePreference, ThemeMode } from '../../ui/theme';
+import { THEME_PREFERENCE_KEY } from './themePreferenceKey';
 
-export const THEME_PREFERENCE_KEY = 'app-theme-preference';
+export { THEME_PREFERENCE_KEY };
 
 export async function loadThemePreference(): Promise<ThemeMode> {
   const storedValue = await Storage.getItem(THEME_PREFERENCE_KEY);

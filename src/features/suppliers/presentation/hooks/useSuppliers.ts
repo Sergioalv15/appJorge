@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { createFocusRefreshGuard } from '../../../../core/utils/focusRefreshGuard';
+import { createLatestWins } from '../../../../core/utils/latestWins';
 import { Supplier } from '../../domain/types';
 import { supplierService } from '../../infrastructure/container';
 
@@ -15,11 +18,22 @@ export function useSuppliers() {
     error: null,
   });
 
-  const refresh = useCallback(async () => {
+  const shouldRefreshOnFocus = useMemo(createFocusRefreshGuard, []);
+  const loadEpoch = useMemo(createLatestWins, []);
+
+  const load = useCallback(async () => {
+    const epoch = loadEpoch.begin();
+
     try {
       const suppliers = await supplierService.list();
+      if (!loadEpoch.isCurrent(epoch)) {
+        return;
+      }
       setState({ loading: false, suppliers, error: null });
     } catch (cause) {
+      if (!loadEpoch.isCurrent(epoch)) {
+        return;
+      }
       const message =
         cause instanceof Error && cause.message.trim().length > 0
           ? cause.message
@@ -30,11 +44,25 @@ export function useSuppliers() {
         error: __DEV__ ? message : 'No se pudieron cargar los proveedores.',
       }));
     }
-  }, []);
+  }, [loadEpoch]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    void load();
+  }, [load]);
 
-  return { ...state, refresh };
+  useEffect(() => {
+    return () => {
+      loadEpoch.invalidate();
+    };
+  }, [loadEpoch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (shouldRefreshOnFocus()) {
+        void load();
+      }
+    }, [load, shouldRefreshOnFocus]),
+  );
+
+  return { ...state, refresh: load };
 }

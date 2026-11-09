@@ -1,3 +1,3 @@
-import { HomeScreen } from "../../src/features/daily-records/presentation/screens/HomeScreen";
+import { SaleScreen } from '../../src/features/store/presentation/screens/SaleScreen';
 
-export default HomeScreen;
+export default SaleScreen;

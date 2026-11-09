@@ -1,8 +1,11 @@
 import { Component, ErrorInfo, PropsWithChildren, ReactNode, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { initializeDatabase } from '../storage/sqlite';
+import {
+  getDatabaseGeneration,
+  initializeDatabase,
+  subscribeDatabaseGeneration,
+} from '../storage/sqlite';
 import { ThemeProvider, useTheme } from '../theme/ThemeProvider';
-import { useHolidaySync } from '../../features/holidays/presentation/hooks/useHolidaySync';
 
 type AppRootErrorBoundaryState = {
   hasError: boolean;
@@ -47,8 +50,6 @@ function AppBootstrapProvider({ children }: PropsWithChildren) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retrySeed, setRetrySeed] = useState(0);
-
-  useHolidaySync();
 
   useEffect(() => {
     let mounted = true;
@@ -132,10 +133,17 @@ function AppBootstrapProvider({ children }: PropsWithChildren) {
 }
 
 export function AppProviders({ children }: PropsWithChildren) {
+  const [databaseGeneration, setDatabaseGeneration] = useState(getDatabaseGeneration);
+
+  useEffect(
+    () => subscribeDatabaseGeneration(setDatabaseGeneration),
+    [],
+  );
+
   return (
     <AppRootErrorBoundary>
       <ThemeProvider>
-        <AppBootstrapProvider>{children}</AppBootstrapProvider>
+        <AppBootstrapProvider key={databaseGeneration}>{children}</AppBootstrapProvider>
       </ThemeProvider>
     </AppRootErrorBoundary>
   );

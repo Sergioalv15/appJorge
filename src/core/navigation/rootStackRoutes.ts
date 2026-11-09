@@ -12,13 +12,6 @@ export const rootStackRoutes: RootStackRouteConfig[] = [
     options: { headerShown: false },
   },
   {
-    name: 'day/[date]',
-    options: {
-      headerShown: true,
-      title: 'Registro del dia',
-    },
-  },
-  {
     name: 'supplier/new',
     options: {
       headerShown: true,
@@ -30,20 +23,6 @@ export const rootStackRoutes: RootStackRouteConfig[] = [
     options: {
       headerShown: true,
       title: 'Editar proveedor',
-    },
-  },
-  {
-    name: 'investment/purchase',
-    options: {
-      headerShown: true,
-      title: 'Registrar inversión',
-    },
-  },
-  {
-    name: 'dataphone/[yearMonth]',
-    options: {
-      headerShown: true,
-      title: 'Ventas datafono',
     },
   },
 ];

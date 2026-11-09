@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import {
+  createLatestAsyncLoadCoordinator,
+} from "../../../../core/utils/latestWins";
+import { createFocusRefreshGuard } from "../../../../core/utils/focusRefreshGuard";
 import { MonthlyOverview } from "../../domain/types";
 import { dailyRecordService } from "../../infrastructure/container";
 
@@ -29,30 +34,55 @@ export async function fetchAnnualMonthSummaries(
   );
 }
 
-export function useAnnualSummary(year: number): AnnualSummaryState {
+export function useAnnualSummary(year: number): AnnualSummaryState & { refresh: () => Promise<void> } {
   const [state, setState] = useState<AnnualSummaryState>({
     loading: true,
     monthlySummaries: [],
     error: null,
   });
+  const loadCoordinator = useMemo(createLatestAsyncLoadCoordinator, []);
+  const shouldRefreshOnFocus = useMemo(createFocusRefreshGuard, []);
 
   const load = useCallback(async () => {
-    setState({ loading: true, monthlySummaries: [], error: null });
-    try {
-      const monthlySummaries = await fetchAnnualMonthSummaries(year);
-      setState({ loading: false, monthlySummaries, error: null });
-    } catch {
-      setState({
-        loading: false,
-        monthlySummaries: [],
-        error: "No se pudo cargar el resumen anual.",
-      });
-    }
-  }, [year]);
+    await loadCoordinator.run(
+      () => fetchAnnualMonthSummaries(year),
+      {
+        onStart: () => {
+          setState({ loading: true, monthlySummaries: [], error: null });
+        },
+        onSuccess: (monthlySummaries) => {
+          setState({ loading: false, monthlySummaries, error: null });
+        },
+        onError: () => {
+          setState({
+            loading: false,
+            monthlySummaries: [],
+            error: "No se pudo cargar el resumen anual.",
+          });
+        },
+      },
+    );
+  }, [loadCoordinator, year]);
+  const loadRef = useRef(load);
+
+  useEffect(() => {
+    loadRef.current = load;
+  }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (shouldRefreshOnFocus()) {
+        void loadRef.current();
+      }
+
+      return () => loadCoordinator.invalidate();
+    }, [loadCoordinator, shouldRefreshOnFocus]),
+  );
 
   useEffect(() => {
     void load();
-  }, [load]);
+    return () => loadCoordinator.invalidate();
+  }, [load, loadCoordinator]);
 
-  return state;
+  return { ...state, refresh: load };
 }

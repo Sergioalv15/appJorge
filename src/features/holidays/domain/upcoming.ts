@@ -4,13 +4,15 @@ import { Holiday, UpcomingHoliday } from './types';
 export function computeUpcomingHolidays(
   holidays: Holiday[],
   today: Date,
-  withinDays: number
+  withinDays: number | null = 14
 ): UpcomingHoliday[] {
   const todayIso = toIsoDate(today);
-  const limitIso = toIsoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + withinDays));
+  const limitIso = withinDays === null
+    ? null
+    : toIsoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + withinDays));
 
   return holidays
-    .filter((holiday) => holiday.date >= todayIso && holiday.date <= limitIso)
+    .filter((holiday) => holiday.date >= todayIso && (limitIso === null || holiday.date <= limitIso))
     .map((holiday) => ({
       ...holiday,
       daysUntil: diffInDays(todayIso, holiday.date),

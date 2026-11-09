@@ -1,49 +1,56 @@
-import { Drawer } from 'expo-router/drawer';
-import {
-  createCalendarDrawerScreenOptions,
-  createDrawerScreenOptions,
-  drawerRouteLabels,
-} from '../../src/core/navigation/drawerScreenOptions';
-import { ThemeDrawerContent } from '../../src/core/navigation/ThemeDrawerContent';
+import { Feather } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/core/theme/ThemeProvider';
 
-export default function DrawerLayout() {
+export default function AppTabsLayout() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
-    <Drawer
-      screenOptions={createDrawerScreenOptions(theme)}
-      drawerContent={(props) => <ThemeDrawerContent {...props} />}
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        sceneStyle: { backgroundColor: theme.colors.background },
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.mutedText,
+        tabBarHideOnKeyboard: true,
+        tabBarStyle: {
+          height: 60 + insets.bottom,
+          paddingTop: 4,
+          paddingBottom: Math.max(4, insets.bottom),
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.border,
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          lineHeight: 14,
+        },
+      }}
     >
-      <Drawer.Screen
+      <Tabs.Screen
         name="index"
         options={{
-          title: drawerRouteLabels.index,
-          drawerLabel: drawerRouteLabels.index,
+          title: 'Venta',
+          tabBarIcon: ({ color, size }) => <Feather name="shopping-bag" color={color} size={size} />,
         }}
       />
-      <Drawer.Screen
-        name="calendar"
+      <Tabs.Screen
+        name="store"
         options={{
-          title: drawerRouteLabels.calendar,
-          drawerLabel: drawerRouteLabels.calendar,
-          ...createCalendarDrawerScreenOptions(theme),
+          title: 'Tienda',
+          tabBarIcon: ({ color, size }) => <Feather name="grid" color={color} size={size} />,
         }}
       />
-      <Drawer.Screen
-        name="annual"
+      <Tabs.Screen
+        name="logistics"
         options={{
-          title: drawerRouteLabels.annual,
-          drawerLabel: drawerRouteLabels.annual,
+          title: 'Logística',
+          tabBarIcon: ({ color, size }) => <Feather name="truck" color={color} size={size} />,
         }}
       />
-      <Drawer.Screen
-        name="suppliers"
-        options={{
-          title: drawerRouteLabels.suppliers,
-          drawerLabel: drawerRouteLabels.suppliers,
-        }}
-      />
-    </Drawer>
+      <Tabs.Screen name="suppliers" options={{ href: null }} />
+    </Tabs>
   );
 }
