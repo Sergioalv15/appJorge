@@ -76,7 +76,7 @@ export function DataphoneMonthScreen() {
             ]}
             onPress={() => router.back()}
           >
-            <Text style={styles.retryText}>Volver</Text>
+          <Text style={[styles.retryText, { color: theme.colors.onPrimary }]}>Volver</Text>
           </Pressable>
         </View>
       </Screen>
@@ -90,21 +90,20 @@ export function DataphoneMonthScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.primary }]}>Ventas datafono</Text>
-        <Text style={[styles.monthLabel, { color: theme.colors.mutedText }]}>
+        <Text style={[styles.monthLabel, { color: theme.colors.text, fontFamily: theme.typography.serifFamily }]}>
           {formatMonthLabel(monthDate)}
         </Text>
       </View>
 
       <View style={styles.totalsRow}>
         <View style={styles.totalBlock}>
-          <Text style={[styles.totalLabel, { color: theme.colors.mutedText }]}>Total datafono</Text>
-          <Text style={[styles.totalValue, { color: theme.colors.primary }]}>
+          <Text style={[styles.totalLabel, { color: theme.colors.mutedText }]}>Total del mes</Text>
+          <Text style={[styles.totalValue, { color: theme.colors.text, fontFamily: theme.typography.serifFamily }]}>
             {formatCurrency(overview.totalDataphoneSales)}
           </Text>
         </View>
         <View style={styles.totalBlock}>
-          <Text style={[styles.totalLabel, { color: theme.colors.mutedText }]}>Días</Text>
+          <Text style={[styles.totalLabel, { color: theme.colors.mutedText }]}>Días con ventas</Text>
           <Text style={[styles.totalValue, { color: theme.colors.text }]}>{dataphoneDays.length}</Text>
         </View>
       </View>
@@ -127,12 +126,7 @@ export function DataphoneMonthScreen() {
                 key={iso}
                 style={[
                   styles.row,
-                  {
-                    borderColor: theme.colors.border,
-                    borderRadius: theme.radius.md,
-                    padding: theme.spacing.sm,
-                    backgroundColor: theme.colors.inputBackground,
-                  },
+                  { borderBottomColor: theme.colors.border },
                 ]}
               >
                 <View style={styles.left}>
@@ -157,15 +151,11 @@ export function DataphoneMonthScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 2,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
-  },
   monthLabel: {
-    fontSize: 14,
+    fontSize: 22,
     textTransform: "capitalize",
   },
   totalsRow: {
@@ -175,22 +165,23 @@ const styles = StyleSheet.create({
   },
   totalBlock: {
     flex: 1,
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 2,
   },
   totalLabel: {
     fontSize: 12,
   },
   totalValue: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 26,
   },
   list: {
     marginTop: 14,
     gap: 6,
   },
   row: {
-    borderWidth: 1,
+    minHeight: 52,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -227,7 +218,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   retryText: {
-    color: "#FFFFFF",
     fontWeight: "700",
   },
 });

@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { Appearance } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { AppTheme, resolveTheme, ThemeMode } from '../../ui/theme';
 import { loadThemePreference, saveThemePreference } from './themePreferenceStore';
 
@@ -75,7 +75,10 @@ export function ThemeProvider({ children }: PropsWithChildren) {
 
   const value = useMemo<ThemeContextValue>(
     () => ({
-      theme: resolveTheme(mode),
+      theme: resolveTheme(
+        mode,
+        Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) ?? 'serif',
+      ),
       mode,
       isHydrated,
       setMode,

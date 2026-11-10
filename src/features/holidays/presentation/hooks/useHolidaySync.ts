@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { holidaySyncService } from '../../infrastructure/container';
+import { notifyHolidaysSynced } from '../holidaySyncEvents';
 
 export function useHolidaySync() {
   const hasSynced = useRef(false);
@@ -10,6 +11,6 @@ export function useHolidaySync() {
     }
     hasSynced.current = true;
 
-    void holidaySyncService.syncSilently();
+    void holidaySyncService.syncSilently().finally(notifyHolidaysSynced);
   }, []);
 }

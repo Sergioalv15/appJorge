@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../../ui/components/Screen';
+import { PrimaryButton } from '../../../../ui/components/PrimaryButton';
 import { useTheme } from '../../../../core/theme/ThemeProvider';
 import { useSupplierForm } from '../hooks/useSupplierForm';
 
@@ -63,7 +64,7 @@ export function SupplierFormScreen() {
 
   if (loading) {
     return (
-      <Screen>
+      <Screen keyboardAware>
         <View style={styles.center}>
           <Text style={[styles.muted, { color: theme.colors.mutedText }]}>Cargando proveedor...</Text>
         </View>
@@ -72,11 +73,8 @@ export function SupplierFormScreen() {
   }
 
   return (
-    <Screen>
-      <View style={styles.card}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>
-          {isEditing ? 'Editar proveedor' : 'Nuevo proveedor'}
-        </Text>
+    <Screen keyboardAware>
+      <View style={styles.form}>
 
         <FormField
           label="Nombre *"
@@ -114,37 +112,20 @@ export function SupplierFormScreen() {
           </Text>
         ) : null}
 
-        <Pressable
-          accessibilityRole="button"
+        <PrimaryButton
+          title={isEditing ? 'Guardar cambios' : 'Crear proveedor'}
           accessibilityLabel={isEditing ? 'Guardar cambios del proveedor' : 'Crear proveedor'}
-          accessibilityState={{ disabled: saving, busy: saving }}
-          style={[
-            styles.button,
-            {
-              backgroundColor: theme.colors.primary,
-              borderRadius: theme.radius.md,
-            },
-            saving ? styles.buttonDisabled : null,
-          ]}
-          disabled={saving}
+          busy={saving}
           onPress={handleSave}
-        >
-          <Text style={styles.buttonText}>
-            {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear proveedor'}
-          </Text>
-        </Pressable>
+        />
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  form: {
     gap: 14,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
   },
   center: {
     alignItems: 'center',
@@ -172,18 +153,5 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: 13,
-  },
-  button: {
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  buttonDisabled: {
-    opacity: 0.65,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
   },
 });

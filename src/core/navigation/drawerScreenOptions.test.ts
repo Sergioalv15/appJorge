@@ -27,7 +27,7 @@ describe("drawerScreenOptions", () => {
   it("hardens drawer gesture and transition polish defaults", () => {
     expect(drawerScreenOptions.swipeEdgeWidth).toBe(24);
     expect(drawerScreenOptions.keyboardDismissMode).toBe("on-drag");
-    expect(drawerScreenOptions.overlayColor).toBe("rgba(17,17,17,0.2)");
+    expect(drawerScreenOptions.overlayColor).toBe(Theme.colors.drawerOverlay);
     expect(calendarDrawerScreenOptions.swipeEdgeWidth).toBe(16);
     expect(calendarDrawerScreenOptions.headerTitle).toBe("");
     expect(calendarDrawerScreenOptions.headerStyle).toEqual({

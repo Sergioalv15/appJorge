@@ -71,10 +71,11 @@ describe('runMigrations', () => {
     expect(db.executedSql).toContain('PRAGMA user_version = 6;');
     expect(db.executedSql).toContain('PRAGMA user_version = 7;');
     expect(db.executedSql).toContain('PRAGMA user_version = 8;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 9;');
   });
 
   it('skips migrations when user_version is up to date', async () => {
-    const db = new FakeDb(8);
+    const db = new FakeDb(9);
 
     await runMigrations(db);
 
@@ -94,6 +95,7 @@ describe('runMigrations', () => {
     expect(db.executedSql).toContain('PRAGMA user_version = 6;');
     expect(db.executedSql).toContain('PRAGMA user_version = 7;');
     expect(db.executedSql).toContain('PRAGMA user_version = 8;');
+    expect(db.executedSql).toContain('PRAGMA user_version = 9;');
     expect(db.executedSql.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS daily_records'))).toBe(false);
   });
 

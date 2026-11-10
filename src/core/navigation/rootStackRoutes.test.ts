@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { rootStackRoutes } from "./rootStackRoutes";
 
 describe("rootStackRoutes", () => {
-  it("sets drawer as the default root shell", () => {
+  it("keeps the existing route group as the default tab shell", () => {
     expect(rootStackRoutes[0]).toEqual({
       name: "(drawer)",
       options: { headerShown: false },
@@ -15,6 +15,16 @@ describe("rootStackRoutes", () => {
       options: {
         headerShown: true,
         title: "Registro del dia",
+      },
+    });
+  });
+
+  it("keeps the investment balance and history outside the tab bar", () => {
+    expect(rootStackRoutes).toContainEqual({
+      name: "investment/balance",
+      options: {
+        headerShown: true,
+        title: "Capital para invertir",
       },
     });
   });

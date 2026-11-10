@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { formatCurrency } from "../../../../core/utils/currency";
-import { useTheme } from "../../../../core/theme/ThemeProvider";
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { formatCurrency } from '../../../../core/utils/currency';
+import { LedgerRow } from '../../../../ui/components/LedgerRow';
+import { useTheme } from '../../../../core/theme/ThemeProvider';
 
 interface MonthOverviewMetrics {
   totalSold: number;
@@ -21,10 +22,11 @@ interface MonthSummaryCardProps {
   isCurrentMonth?: boolean;
   badge?: string | null;
   onPressDataphone?: () => void;
+  onPressMonth?: () => void;
 }
 
 export function formatMonthName(date: Date): string {
-  return date.toLocaleDateString("es-ES", { month: "long" });
+  return date.toLocaleDateString('es-ES', { month: 'long' });
 }
 
 export function MonthSummaryCard({
@@ -32,136 +34,107 @@ export function MonthSummaryCard({
   isCurrentMonth = false,
   badge = null,
   onPressDataphone,
+  onPressMonth,
 }: MonthSummaryCardProps) {
   const { theme } = useTheme();
   const { month, overview } = monthly;
-
-  const dataphoneLine = (
-    <View style={styles.metricLine}>
-      <Text style={[styles.metricLabel, { color: theme.colors.mutedText }]}>
-        Datafono
-      </Text>
-      <Text style={[styles.metricValue, { color: theme.colors.primary }]}>
-        {formatCurrency(overview.totalDataphoneSales)}
-        {onPressDataphone ? <Text style={styles.dataphoneHint}>  ver ›</Text> : null}
-      </Text>
-    </View>
+  const monthName = formatMonthName(month);
+  const monthTitle = (
+    <Text
+      style={[
+        styles.monthName,
+        {
+          color: isCurrentMonth ? theme.colors.primary : theme.colors.text,
+          fontFamily: theme.typography.serifFamily,
+        },
+      ]}
+    >
+      {monthName}
+    </Text>
   );
 
   return (
     <View
       style={[
-        styles.card,
+        styles.section,
+        { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
         isCurrentMonth
-          ? { borderColor: theme.colors.primary, borderWidth: 2 }
-          : { borderColor: theme.colors.border, borderWidth: 1 },
-        {
-          backgroundColor: theme.colors.surface,
-          borderRadius: theme.radius.md,
-        },
+          ? { borderColor: theme.colors.primary }
+          : null,
       ]}
     >
       <View style={styles.header}>
-        <Text style={[styles.monthName, { color: theme.colors.text }]}>
-          {formatMonthName(month)}
-        </Text>
-        {badge ? (
-          <Text style={[styles.badge, { color: theme.colors.primary }]}>{badge}</Text>
-        ) : null}
+        {onPressMonth ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Abrir mes de ${monthName} en el calendario`}
+            accessibilityHint="Muestra este mes en el calendario"
+            onPress={onPressMonth}
+            style={({ pressed }) => [styles.headerMonthButton, pressed ? styles.pressed : null]}
+          >
+            {monthTitle}
+            <Text accessibilityElementsHidden style={[styles.monthChevron, { color: theme.colors.mutedText }]}>›</Text>
+          </Pressable>
+        ) : monthTitle}
+        {badge ? <Text style={[styles.badge, { color: theme.colors.primary }]}>{badge}</Text> : null}
       </View>
 
-      <View style={styles.metricLine}>
-        <Text style={[styles.metricLabel, { color: theme.colors.mutedText }]}>
-          Ventas / Bruto
-        </Text>
-        <Text style={[styles.metricValue, { color: theme.colors.text }]}>
-          {formatCurrency(overview.totalSold)} / {formatCurrency(overview.grossProfit)}
-        </Text>
-      </View>
-
-      <View style={styles.metricLine}>
-        <Text style={[styles.metricLabel, { color: theme.colors.mutedText }]}>
-          Destinado a inversion
-        </Text>
-        <Text style={[styles.metricValue, { color: theme.colors.primarySoft }]}>
-          {formatCurrency(overview.totalInvested)}
-        </Text>
-      </View>
-
-      <View style={styles.metricLine}>
-        <Text style={[styles.metricLabel, { color: theme.colors.mutedText }]}>
-          Otros gastos
-        </Text>
-        <Text style={[styles.metricValue, { color: theme.colors.danger }]}>
-          {formatCurrency(overview.totalAdditionalExpenses)}
-        </Text>
-      </View>
-
-      <View style={styles.metricLine}>
-        <Text style={[styles.metricLabel, { color: theme.colors.mutedText }]}>
-          Neto
-        </Text>
-        <Text style={[styles.metricValue, { color: overview.netProfit < 0 ? theme.colors.danger : theme.colors.success }]}>
-          {formatCurrency(overview.netProfit)}
-        </Text>
-      </View>
-
-      {onPressDataphone ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Ventas datafono de ${formatMonthName(month)}`}
-          accessibilityHint="Abre el detalle de ventas datafono de este mes"
-          style={({ pressed }) => [pressed ? styles.dataphonePressed : null]}
+      <View style={styles.rows}>
+        <LedgerRow label="Ventas" value={formatCurrency(overview.totalSold)} valueColor={theme.colors.sales} />
+        <LedgerRow label="Beneficio bruto" value={formatCurrency(overview.grossProfit)} valueColor={overview.grossProfit < 0 ? theme.colors.danger : overview.grossProfit > 0 ? theme.colors.success : theme.colors.text} />
+        <LedgerRow label="Destinado a inversión" value={formatCurrency(overview.totalInvested)} valueColor={theme.colors.investment} />
+        <LedgerRow label="Otros gastos" value={formatCurrency(overview.totalAdditionalExpenses)} valueColor={theme.colors.danger} />
+        <LedgerRow
+          label={overview.netProfit < 0 ? 'Pérdida neta' : 'Beneficio neto'}
+          value={formatCurrency(overview.netProfit)}
+          valueColor={overview.netProfit < 0 ? theme.colors.danger : overview.netProfit > 0 ? theme.colors.success : theme.colors.text}
+        />
+        <LedgerRow
+          label="Ventas datafono"
+          value={formatCurrency(overview.totalDataphoneSales)}
+          valueColor={theme.colors.sales}
           onPress={onPressDataphone}
-        >
-          {dataphoneLine}
-        </Pressable>
-      ) : (
-        dataphoneLine
-      )}
+          accessibilityLabel={`Ventas datafono de ${monthName}, ${formatCurrency(overview.totalDataphoneSales)}`}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  section: {
+    borderWidth: 1,
+    borderRadius: 12,
     padding: 12,
-    gap: 8,
+    gap: 4,
+  },
+  rows: {
+    gap: 4,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   monthName: {
-    fontSize: 16,
-    fontWeight: "800",
-    textTransform: "capitalize",
+    fontSize: 20,
+    textTransform: 'capitalize',
+  },
+  headerMonthButton: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  monthChevron: {
+    fontSize: 20,
   },
   badge: {
     fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
   },
-  metricLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  metricLabel: {
-    fontSize: 12,
-  },
-  metricValue: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  dataphoneHint: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  dataphonePressed: {
-    opacity: 0.62,
+  pressed: {
+    opacity: 0.65,
   },
 });

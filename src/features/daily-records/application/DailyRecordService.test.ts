@@ -14,6 +14,12 @@ class InMemoryDailyRecordRepository implements DailyRecordRepository {
     return this.map.get(date) ?? null;
   }
 
+  async findMostRecentOnOrBefore(date: string): Promise<DailyRecord | null> {
+    return [...this.map.values()]
+      .filter((record) => record.date <= date)
+      .sort((left, right) => right.date.localeCompare(left.date))[0] ?? null;
+  }
+
   async findByMonth(month: string): Promise<DailyRecord[]> {
     return [...this.map.values()]
       .filter((item) => item.date.startsWith(month))
@@ -61,6 +67,44 @@ describe('DailyRecordService', () => {
     const service = new DailyRecordService(new InMemoryDailyRecordRepository());
 
     const result = await service.getDailyRecord('2026-07-13');
+
+    expect(result.record).toBeNull();
+    expect(result.profit).toEqual({ grossProfit: 0, netProfit: 0, investment: 0 });
+  });
+
+  it('finds the most recent saved day across month and year boundaries without selecting future records', async () => {
+    const repo = new InMemoryDailyRecordRepository();
+    const service = new DailyRecordService(repo);
+    for (const date of ['2025-12-31', '2026-01-02', '2026-02-01']) {
+      await service.saveFromForm({
+        date,
+        totalSold: '100',
+        additionalExpenses: '10',
+        profitPercent: '30',
+        notes: '',
+        dataphoneSales: '20',
+      });
+    }
+
+    const result = await service.getMostRecentDailyRecord('2026-01-01');
+
+    expect(result.record?.date).toBe('2025-12-31');
+    expect(result.profit).toEqual({ grossProfit: 30, netProfit: 20, investment: 70 });
+  });
+
+  it('returns an empty result when no saved day exists on or before the requested date', async () => {
+    const repo = new InMemoryDailyRecordRepository();
+    const service = new DailyRecordService(repo);
+    await service.saveFromForm({
+      date: '2026-01-02',
+      totalSold: '100',
+      additionalExpenses: '10',
+      profitPercent: '30',
+      notes: '',
+      dataphoneSales: '',
+    });
+
+    const result = await service.getMostRecentDailyRecord('2026-01-01');
 
     expect(result.record).toBeNull();
     expect(result.profit).toEqual({ grossProfit: 0, netProfit: 0, investment: 0 });

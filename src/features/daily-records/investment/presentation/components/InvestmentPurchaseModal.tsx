@@ -1,4 +1,14 @@
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../../../../../core/theme/ThemeProvider';
 import { useSuppliers } from '../../../../suppliers/presentation/hooks/useSuppliers';
@@ -8,6 +18,8 @@ interface Props {
   visible: boolean;
   saving: boolean;
   defaultDate?: string;
+  showTitle?: boolean;
+  title?: string;
   onClose: () => void;
   onSubmit: (input: {
     date: string;
@@ -17,7 +29,7 @@ interface Props {
   }) => Promise<boolean>;
 }
 
-export function InvestmentPurchaseModal({ visible, saving, defaultDate, onClose, onSubmit }: Props) {
+export function InvestmentPurchaseModal({ visible, saving, defaultDate, showTitle = true, title = 'Registrar inversión', onClose, onSubmit }: Props) {
   const { theme } = useTheme();
   const { suppliers } = useSuppliers();
   const [amount, setAmount] = useState('');
@@ -40,6 +52,12 @@ export function InvestmentPurchaseModal({ visible, saving, defaultDate, onClose,
     () => suppliers.find((supplier) => supplier.id === selectedSupplierId) ?? null,
     [selectedSupplierId, suppliers]
   );
+  const dateLabel = new Date(`${defaultDate ?? toIsoDate(new Date())}T00:00:00`).toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   const handleSave = async () => {
     if (!selectedSupplierId) {
@@ -71,7 +89,14 @@ export function InvestmentPurchaseModal({ visible, saving, defaultDate, onClose,
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={styles.modalScroll}
+          keyboardShouldPersistTaps="handled"
+        >
         <View
           style={[
             styles.modalContent,
@@ -82,9 +107,16 @@ export function InvestmentPurchaseModal({ visible, saving, defaultDate, onClose,
             },
           ]}
         >
-          <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-            Registrar inversión
-          </Text>
+          {showTitle ? (
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>{title}</Text>
+          ) : null}
+
+          <View style={styles.field}>
+            <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Fecha del movimiento</Text>
+            <Text accessibilityLabel={`Fecha de la inversión, ${dateLabel}`} style={[styles.dateValue, { color: theme.colors.mutedText }]}>
+              {dateLabel}
+            </Text>
+          </View>
 
           <View style={styles.field}>
             <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Proveedor *</Text>
@@ -251,13 +283,14 @@ export function InvestmentPurchaseModal({ visible, saving, defaultDate, onClose,
               disabled={saving}
               onPress={() => void handleSave()}
             >
-              <Text style={styles.modalButtonTextPrimary}>
+              <Text style={[styles.modalButtonTextPrimary, { color: theme.colors.onPrimary }]}>
                 {saving ? 'Guardando...' : 'Guardar'}
               </Text>
             </Pressable>
           </View>
         </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -273,21 +306,21 @@ export function InvestmentPurchaseButton({ adding, onPress }: TriggerProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Registrar inversión a proveedor"
-      accessibilityHint="Abre el formulario para registrar una inversión con un proveedor"
+      accessibilityLabel="Agregar inversión hoy"
+      accessibilityHint="Abre el formulario para registrar una inversión de hoy con un proveedor"
       accessibilityState={{ disabled: adding }}
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: theme.colors.success,
-          borderRadius: theme.radius.md,
+          backgroundColor: theme.colors.primary,
+          borderRadius: theme.radius.sm,
         },
         pressed ? styles.buttonPressed : null,
       ]}
       disabled={adding}
       onPress={onPress}
     >
-      <Text style={styles.buttonText}>Invertir</Text>
+      <Text style={[styles.buttonText, { color: theme.colors.onPrimary }]}>Invertir hoy</Text>
     </Pressable>
   );
 }
@@ -299,12 +332,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
+  modalScroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   modalContent: {
     gap: 12,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  dateValue: {
+    minHeight: 40,
+    paddingVertical: 10,
+    fontSize: 14,
+    textTransform: 'capitalize',
   },
   field: {
     gap: 6,
@@ -363,8 +406,10 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
     borderWidth: 1,
+    minHeight: 48,
     paddingVertical: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonPressed: {
     opacity: 0.65,
@@ -374,18 +419,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   modalButtonTextPrimary: {
-    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 14,
   },
   button: {
     flex: 1,
-    paddingVertical: 10,
+    minHeight: 48,
+    paddingHorizontal: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
-    color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
+    textAlign: 'center',
   },
 });

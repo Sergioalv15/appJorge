@@ -10,8 +10,8 @@ interface QuickAction {
 }
 
 const ACTIONS: QuickAction[] = [
-  { label: 'Registro hoy', emoji: '📝', href: '' },
-  { label: 'Invertir', emoji: '💰', href: '/investment/purchase' },
+  { label: 'Registrar día hoy', emoji: '📝', href: '' },
+  { label: 'Invertir hoy', emoji: '💰', href: '/investment/purchase' },
   { label: 'Calendario', emoji: '📅', href: '/calendar' },
 ];
 
@@ -22,6 +22,8 @@ export function QuickActionRow() {
   const handlePress = (action: QuickAction) => {
     if (action.href === '') {
       router.push(`/day/${toIsoDate(new Date())}`);
+    } else if (action.href === '/investment/purchase') {
+      router.push(`/investment/purchase?date=${toIsoDate(new Date())}` as never);
     } else {
       router.push(action.href as never);
     }

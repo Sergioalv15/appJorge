@@ -1,14 +1,28 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../src/ui/components/Screen';
 import { InvestmentPurchaseModal } from '../../src/features/daily-records/investment/presentation/components/InvestmentPurchaseModal';
 import { investmentBalanceService } from '../../src/features/daily-records/infrastructure/container';
-import { toIsoDate } from '../../src/core/utils/date';
+import { isValidIsoDate, toIsoDate } from '../../src/core/utils/date';
+import { createInvestmentPurchaseCloseHandler } from '../../src/features/daily-records/investment/presentation/investmentPurchaseNavigation';
 
 export default function InvestmentPurchaseScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ date?: string }>();
   const [saving, setSaving] = useState(false);
+  const closePurchase = useMemo(
+    () =>
+      createInvestmentPurchaseCloseHandler({
+        canGoBack: () => router.canGoBack(),
+        back: () => router.back(),
+        replaceCalendar: () => router.replace('/calendar'),
+      }),
+    [router],
+  );
+
+  const hasExplicitDate = typeof params.date === 'string' && isValidIsoDate(params.date);
+  const initialDate = hasExplicitDate ? params.date as string : toIsoDate(new Date());
 
   const handleSubmit = async (input: {
     date: string;
@@ -34,7 +48,6 @@ export default function InvestmentPurchaseScreen() {
         note: input.note,
         supplierId: input.supplierId,
       });
-      router.back();
       return true;
     } catch {
       Alert.alert('Error', 'No se pudo guardar la inversión.');
@@ -49,8 +62,9 @@ export default function InvestmentPurchaseScreen() {
       <InvestmentPurchaseModal
         visible={true}
         saving={saving}
-        defaultDate={toIsoDate(new Date())}
-        onClose={() => router.back()}
+        defaultDate={initialDate}
+        title={hasExplicitDate ? 'Registrar inversión' : 'Agregar inversión hoy'}
+        onClose={closePurchase}
         onSubmit={handleSubmit}
       />
     </Screen>

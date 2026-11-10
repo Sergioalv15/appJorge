@@ -6,4 +6,5 @@ export interface HolidayRepository {
   getAll(): Promise<Holiday[]>;
   getLastSync(): Promise<string | null>;
   setLastSync(timestamp: string): Promise<void>;
+  applySync(holidays: Holiday[], timestamp: string | null, generation: number): Promise<boolean>;
 }

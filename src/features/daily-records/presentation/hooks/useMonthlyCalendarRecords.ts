@@ -3,7 +3,7 @@ import { useFocusEffect } from "expo-router";
 import { monthKey } from "../../../../core/utils/date";
 import { dailyRecordService } from "../../infrastructure/container";
 import { loadMonthlyBoundaryAwareRecords } from "../calendar/monthlyCalendarBoundary";
-import { createFocusRefreshGuard } from "./focusRefreshGuard";
+import { createFocusRefreshGuard } from "../../../../core/utils/focusRefreshGuard";
 import {
   buildMonthlyCalendarLoadStartState,
   createInitialMonthlyCalendarRecordsState,

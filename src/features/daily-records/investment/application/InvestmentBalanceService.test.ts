@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DailyRecordRepository } from '../../application/DailyRecordRepository';
 import { DailyRecord } from '../../domain/types';
-import { InvestmentAdjustment, InvestmentHistoryItem, InvestmentType } from '../domain/types';
+import { InvestmentAdjustment, InvestmentHistoryPage, InvestmentHistoryPageRequest, InvestmentType } from '../domain/types';
 import { InvestmentAdjustmentRepository } from './InvestmentAdjustmentRepository';
 import { InvestmentBalanceService } from './InvestmentBalanceService';
 
@@ -13,6 +13,11 @@ class FakeDailyRecordRepository implements DailyRecordRepository {
   }
   async findByDate(date: string): Promise<DailyRecord | null> {
     return this.records.find((r) => r.date === date) ?? null;
+  }
+  async findMostRecentOnOrBefore(date: string): Promise<DailyRecord | null> {
+    return this.records
+      .filter((record) => record.date <= date)
+      .sort((left, right) => right.date.localeCompare(left.date))[0] ?? null;
   }
   async findByMonth(month: string): Promise<DailyRecord[]> {
     return this.records.filter((r) => r.date.startsWith(month));
@@ -50,8 +55,8 @@ class FakeAdjustmentRepository implements InvestmentAdjustmentRepository {
     }
     return this.adjustments.filter((a) => types.includes(a.type));
   }
-  async listHistory(): Promise<InvestmentHistoryItem[]> {
-    return [];
+  async listHistoryPage(_request: InvestmentHistoryPageRequest): Promise<InvestmentHistoryPage> {
+    return { items: [], hasMore: false, nextCursor: null };
   }
   async sumAmount(): Promise<number> {
     return this.adjustments

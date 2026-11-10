@@ -1,9 +1,17 @@
-import { getDb, initializeDatabase } from '../../../../core/storage/sqlite';
+import { withDatabaseAccess } from '../../../../core/storage/sqlite';
 import {
   AddInvestmentAdjustmentInput,
   InvestmentAdjustmentRepository,
 } from '../application/InvestmentAdjustmentRepository';
-import { InvestmentAdjustment, InvestmentHistoryItem, InvestmentType } from '../domain/types';
+import {
+  InvestmentAdjustment,
+  InvestmentHistoryCursor,
+  InvestmentHistoryItem,
+  InvestmentHistoryPage,
+  InvestmentHistoryPageRequest,
+  InvestmentType,
+} from '../domain/types';
+import { buildInvestmentHistorySql } from './investmentHistoryQuery';
 
 type InvestmentAdjustmentRow = {
   id: number;
@@ -27,16 +35,13 @@ function mapRow(row: InvestmentAdjustmentRow): InvestmentAdjustment {
 
 export class SQLiteInvestmentAdjustmentRepository implements InvestmentAdjustmentRepository {
   async add(input: AddInvestmentAdjustmentInput): Promise<InvestmentAdjustment> {
-    await initializeDatabase();
-    const db = await getDb();
-
     const type: InvestmentType = input.type ?? 'ajuste';
     const supplierId = input.supplierId ?? null;
 
-    const result = await db.runAsync(
+    const result = await withDatabaseAccess((db) => db.runAsync(
       `INSERT INTO investment_adjustments (date, amount, note, type, supplier_id) VALUES (?, ?, ?, ?, ?)`,
       [input.date, input.amount, input.note, type, supplierId]
-    );
+    ));
 
     return {
       id: result.lastInsertRowId,
@@ -49,69 +54,65 @@ export class SQLiteInvestmentAdjustmentRepository implements InvestmentAdjustmen
   }
 
   async listAll(types?: InvestmentType[]): Promise<InvestmentAdjustment[]> {
-    await initializeDatabase();
-    const db = await getDb();
-
-    const rows =
+    const rows = await withDatabaseAccess((db) =>
       types && types.length > 0
-        ? await db.getAllAsync<InvestmentAdjustmentRow>(
+        ? db.getAllAsync<InvestmentAdjustmentRow>(
             `SELECT id, date, amount, note, type, supplier_id FROM investment_adjustments
              WHERE type IN (${types.map(() => '?').join(', ')})
              ORDER BY date ASC, id ASC`,
             types
           )
-        : await db.getAllAsync<InvestmentAdjustmentRow>(
+        : db.getAllAsync<InvestmentAdjustmentRow>(
             `SELECT id, date, amount, note, type, supplier_id FROM investment_adjustments ORDER BY date ASC, id ASC`
-          );
+          )
+    );
 
     return rows.map(mapRow);
   }
 
-  async listHistory(): Promise<InvestmentHistoryItem[]> {
-    await initializeDatabase();
-    const db = await getDb();
-
-    const rows = await db.getAllAsync<{
+  async listHistoryPage(
+    request: InvestmentHistoryPageRequest,
+  ): Promise<InvestmentHistoryPage> {
+    const query = buildInvestmentHistorySql(request);
+    const rows = await withDatabaseAccess((db) => db.getAllAsync<{
       id: number;
       date: string;
       amount: number;
       note: string;
+      type: string | null;
       supplier_name: string | null;
-    }>(
-      `SELECT a.id, a.date, a.amount, a.note, s.name AS supplier_name
-       FROM investment_adjustments a
-       LEFT JOIN suppliers s ON s.id = a.supplier_id
-       ORDER BY a.date DESC, a.id DESC
-       LIMIT 100`
-    );
+    }>(query.sql, query.parameters));
 
-    return rows.map((row) => ({
+    const hasMore = rows.length > query.pageSize;
+    const pageRows = hasMore ? rows.slice(0, query.pageSize) : rows;
+    const items = pageRows.map((row): InvestmentHistoryItem => ({
       id: row.id,
       date: row.date,
       amount: row.amount,
       note: row.note,
+      type: row.type === 'compra' ? 'compra' : 'ajuste',
       supplierName: row.supplier_name ?? null,
     }));
+    const last = items[items.length - 1];
+    const nextCursor: InvestmentHistoryCursor | null = hasMore && last
+      ? { date: last.date, id: last.id }
+      : null;
+
+    return { items, hasMore, nextCursor };
   }
 
   async sumAmount(): Promise<number> {
-    await initializeDatabase();
-    const db = await getDb();
-
-    const row = await db.getFirstAsync<{ total: number | null }>(
-      `SELECT COALESCE(SUM(amount), 0) AS total FROM investment_adjustments WHERE type = 'ajuste'`
-    );
+    const row = await withDatabaseAccess((db) => db.getFirstAsync<{ total: number | null }>(
+      `SELECT COALESCE(SUM(amount), 0) AS total FROM investment_adjustments WHERE COALESCE(type, 'ajuste') = 'ajuste'`
+    ));
 
     return row?.total ?? 0;
   }
 
   async sumPurchases(): Promise<number> {
-    await initializeDatabase();
-    const db = await getDb();
-
-    const row = await db.getFirstAsync<{ total: number | null }>(
+    const row = await withDatabaseAccess((db) => db.getFirstAsync<{ total: number | null }>(
       `SELECT COALESCE(SUM(amount), 0) AS total FROM investment_adjustments WHERE type = 'compra'`
-    );
+    ));
 
     return row?.total ?? 0;
   }

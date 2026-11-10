@@ -21,8 +21,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "sergioalv961@gmail.com",
-        "ascAppId": "com.appjorge.mobile"
+        "appleId": "sergioalv961@gmail.com"
       }
     }
   }

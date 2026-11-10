@@ -14,7 +14,7 @@ export function DailyRecordScreen() {
 
   if (!date) {
     return (
-      <Screen>
+      <Screen keyboardAware>
         <Text style={[styles.error, { color: theme.colors.danger }]}>Fecha inválida</Text>
       </Screen>
     );
@@ -22,7 +22,7 @@ export function DailyRecordScreen() {
 
   if (state.loading) {
     return (
-      <Screen>
+      <Screen keyboardAware>
         <View style={styles.center}>
           <ActivityIndicator color={theme.colors.primary} />
           <Text style={[styles.muted, { color: theme.colors.mutedText }]}>Cargando día...</Text>
@@ -32,7 +32,7 @@ export function DailyRecordScreen() {
   }
 
   return (
-    <Screen>
+    <Screen keyboardAware>
       <DailyRecordForm
         date={date}
         totalSold={state.totalSold}

@@ -1,4 +1,3 @@
-import { Link } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
@@ -19,7 +18,6 @@ import {
   buildMonthlyDayAccessibilityHint,
   buildMonthlyDayAccessibilityLabel,
 } from "../calendar/calendarA11y";
-import { buildDayRouteFromIso } from "../calendar/dayRoute";
 import { resolveMonthlyDayCellBorder } from "../calendar/monthlyCalendarVisualState";
 import { DailyRecord } from "../../domain/types";
 
@@ -27,6 +25,7 @@ interface Props {
   visibleMonth: Date;
   selectedDateIso: string | null;
   recordsByIso: Map<string, DailyRecord>;
+  holidaysByIso?: Map<string, string>;
   showInitialLoadingOverlay: boolean;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
@@ -41,6 +40,7 @@ export function MonthlyCalendar({
   visibleMonth,
   selectedDateIso,
   recordsByIso,
+  holidaysByIso,
   showInitialLoadingOverlay,
   onPreviousMonth,
   onNextMonth,
@@ -87,7 +87,13 @@ export function MonthlyCalendar({
             {visibleMonth.getFullYear()}
           </Text>
           <Text
-            style={[styles.title, { color: theme.colors.calendarText }]}
+            style={[
+              styles.title,
+              {
+                color: theme.colors.calendarText,
+                fontFamily: theme.typography.serifFamily,
+              },
+            ]}
             numberOfLines={1}
           >
             {monthLabel}
@@ -136,6 +142,25 @@ export function MonthlyCalendar({
             Con registro
           </Text>
         </View>
+
+        {holidaysByIso ? (
+          <View style={styles.legend}>
+            <View
+              style={[
+                styles.holidayBar,
+                { backgroundColor: theme.colors.danger },
+              ]}
+            />
+            <Text
+              style={[
+                styles.legendLabel,
+                { color: theme.colors.calendarMutedText },
+              ]}
+            >
+              Festivo
+            </Text>
+          </View>
+        ) : null}
 
         <Pressable
           style={({ pressed }) => [
@@ -189,7 +214,7 @@ export function MonthlyCalendar({
                   style={[
                     styles.weekdayHeader,
                     { color: theme.colors.calendarMutedText },
-                    isSunday ? styles.sundayHeader : null,
+                    isSunday ? { color: theme.colors.primarySoft } : null,
                   ]}
                 >
                   {label}
@@ -215,9 +240,17 @@ export function MonthlyCalendar({
                     cell.isCurrentMonth &&
                     cell.economicSignal !== "none";
                   const showRecordDot = hasRecord && !showEconomicSignal;
+                  const holidayName = holidaysByIso?.get(cell.iso);
+                  const showHolidayIndicator =
+                    Boolean(holidayName) && cell.isCurrentMonth;
                   const isLastColumn =
                     dayIndex === MONTHLY_CALENDAR_COLUMN_COUNT - 1;
                   const isSelected = selectedDateIso === cell.iso;
+                  const dayAccessibilityLabel = buildMonthlyDayAccessibilityLabel(
+                    cell.iso,
+                    cell.status,
+                    cell.isCurrentMonth,
+                  );
 
                   return (
                     <View
@@ -235,11 +268,10 @@ export function MonthlyCalendar({
                           : null,
                       ]}
                     >
-                      <Link href={buildDayRouteFromIso(cell.iso)} asChild>
-                        <Pressable
+                      <Pressable
                           style={({ pressed }) => [
                             styles.dayCell,
-                            { minHeight: MONTHLY_CELL_MIN_HEIGHT },
+                            { minHeight: Math.max(MONTHLY_CELL_MIN_HEIGHT, 60) },
                             cell.isCurrentMonth
                               ? styles.currentMonthCell
                               : styles.adjacentMonthCell,
@@ -253,19 +285,17 @@ export function MonthlyCalendar({
                               isSelected,
                               cell.isToday,
                               theme.colors.primary,
-                              theme.isDark
-                                ? "rgba(216,160,122,0.20)"
-                                : "rgba(91,58,41,0.12)",
+                              theme.colors.card,
                               theme.colors.calendarHighlight,
                             ),
                           ]}
                           onPress={() => onSelectDate(cell.iso)}
                           accessibilityRole="button"
-                          accessibilityLabel={buildMonthlyDayAccessibilityLabel(
-                            cell.iso,
-                            cell.status,
-                            cell.isCurrentMonth,
-                          )}
+                          accessibilityLabel={
+                            holidayName
+                              ? `${dayAccessibilityLabel}, festivo ${holidayName}`
+                              : dayAccessibilityLabel
+                          }
                           accessibilityHint={buildMonthlyDayAccessibilityHint(
                             cell.status,
                             cell.isCurrentMonth,
@@ -277,9 +307,7 @@ export function MonthlyCalendar({
                               cell.isToday ? styles.todayBadge : null,
                               cell.isToday
                                 ? {
-                                    backgroundColor: theme.isDark
-                                      ? theme.colors.white
-                                      : theme.colors.black,
+                                    backgroundColor: theme.colors.primary,
                                   }
                                 : null,
                             ]}
@@ -292,9 +320,7 @@ export function MonthlyCalendar({
                                   : styles.adjacentMonthText,
                                 {
                                   color: cell.isToday
-                                    ? theme.isDark
-                                      ? theme.colors.black
-                                      : theme.colors.white
+                                    ? theme.colors.onPrimary
                                     : cell.isCurrentMonth
                                       ? theme.colors.calendarText
                                       : theme.colors.calendarMutedText,
@@ -306,6 +332,17 @@ export function MonthlyCalendar({
                           </View>
 
                           <View style={styles.recordIndicatorSlot}>
+                            {showHolidayIndicator ? (
+                              <View
+                                style={[
+                                  styles.holidayBar,
+                                  {
+                                    backgroundColor: theme.colors.danger,
+                                  },
+                                ]}
+                              />
+                            ) : null}
+
                             {showEconomicSignal ? (
                               <View
                                 style={[
@@ -348,7 +385,6 @@ export function MonthlyCalendar({
                             ) : null}
                           </View>
                         </Pressable>
-                      </Link>
                     </View>
                   );
                 })}
@@ -396,8 +432,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   monthButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -424,15 +460,17 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   title: {
-    fontSize: 44,
-    letterSpacing: 5,
-    fontWeight: "900",
+    fontSize: 30,
+    lineHeight: 36,
+    textTransform: "capitalize",
   },
   statusRow: {
-    minHeight: 32,
+    minHeight: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
   },
   legend: {
     flexDirection: "row",
@@ -445,7 +483,8 @@ const styles = StyleSheet.create({
   },
   todayButton: {
     minWidth: 52,
-    height: 32,
+    minHeight: 44,
+    paddingHorizontal: 10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -460,13 +499,12 @@ const styles = StyleSheet.create({
     opacity: 0.62,
   },
   calendarSurface: {
-    flex: 1,
+    flex: 0,
     position: "relative",
-    overflow: "hidden",
-    borderRadius: 12,
+    overflow: "visible",
   },
   weekdayRow: {
-    height: WEEKDAY_ROW_HEIGHT,
+    minHeight: WEEKDAY_ROW_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -481,14 +519,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 12,
   },
-  sundayHeader: {
-    color: "rgba(244,116,116,0.82)",
-  },
   grid: {
-    flex: 1,
+    flexGrow: 0,
   },
   weekRow: {
-    flex: 1,
+    minHeight: Math.max(MONTHLY_CELL_MIN_HEIGHT, 60),
     flexDirection: "row",
   },
   dayCellSlot: {
@@ -496,11 +531,12 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     flex: 1,
-    paddingVertical: 5,
+    minHeight: Math.max(MONTHLY_CELL_MIN_HEIGHT, 60),
+    paddingVertical: 3,
     justifyContent: "space-between",
     alignItems: "center",
     // backgroundColor: theme.colors.primary,
-    borderRadius: 8,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: "transparent",
   },
@@ -539,7 +575,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   dayNumber: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
   },
   currentMonthText: {
@@ -563,6 +599,12 @@ const styles = StyleSheet.create({
   economicSignalPositive: {},
   economicSignalNegative: {},
   economicSignalNeutral: {},
+  holidayBar: {
+    width: 10,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: "transparent",
+  },
   recordDot: {
     width: 7,
     height: 7,

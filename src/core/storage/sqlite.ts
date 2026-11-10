@@ -1,5 +1,12 @@
 import * as SQLite from 'expo-sqlite';
 import { runMigrations } from './sqliteMigrations';
+import {
+  advanceDatabaseGeneration,
+  blockDatabaseOperations,
+  getDatabaseGeneration,
+  runDatabaseOperation,
+  subscribeDatabaseGeneration,
+} from './databaseCoordinator';
 
 const DB_NAME = 'appjorge.db';
 
@@ -7,7 +14,7 @@ let singletonDb: SQLite.SQLiteDatabase | null = null;
 let initialized = false;
 let initializationPromise: Promise<void> | null = null;
 
-export async function getDb(): Promise<SQLite.SQLiteDatabase> {
+async function getSingletonDb(): Promise<SQLite.SQLiteDatabase> {
   if (!singletonDb) {
     singletonDb = await SQLite.openDatabaseAsync(DB_NAME);
   }
@@ -16,6 +23,10 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
 }
 
 export async function initializeDatabase(): Promise<void> {
+  await withDatabaseAccess(async () => undefined);
+}
+
+async function initializeDatabaseUnsafe(db: SQLite.SQLiteDatabase): Promise<void> {
   if (initialized) {
     return;
   }
@@ -25,7 +36,6 @@ export async function initializeDatabase(): Promise<void> {
   }
 
   initializationPromise = (async () => {
-    const db = await getDb();
     await runMigrations(db);
     initialized = true;
   })().catch((error) => {
@@ -35,3 +45,20 @@ export async function initializeDatabase(): Promise<void> {
 
   await initializationPromise;
 }
+
+export async function withDatabaseAccess<T>(
+  operation: (db: SQLite.SQLiteDatabase) => Promise<T>,
+): Promise<T> {
+  return runDatabaseOperation(async () => {
+    const db = await getSingletonDb();
+    await initializeDatabaseUnsafe(db);
+    return operation(db);
+  });
+}
+
+export {
+  advanceDatabaseGeneration,
+  blockDatabaseOperations,
+  getDatabaseGeneration,
+  subscribeDatabaseGeneration,
+};

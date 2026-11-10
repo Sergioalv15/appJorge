@@ -6,6 +6,7 @@ import { useTheme } from "../../../../core/theme/ThemeProvider";
 import { useAnnualSummary } from "../hooks/useAnnualSummary";
 import { MonthSummaryCard } from "../components/MonthSummaryCard";
 import { monthKey } from "../../../../core/utils/date";
+import { PrimaryButton } from "../../../../ui/components/PrimaryButton";
 
 function formatYear(date: Date): string {
   return String(date.getFullYear());
@@ -18,14 +19,14 @@ export function AnnualSummaryScreen() {
   const [visibleYear, setVisibleYear] = useState(currentYear);
 
   const isShowingCurrentYear = visibleYear === currentYear;
-  const { loading, error, monthlySummaries } = useAnnualSummary(visibleYear);
+  const { loading, error, monthlySummaries, refresh } = useAnnualSummary(visibleYear);
 
   const handlePreviousYear = () => setVisibleYear((prev) => prev - 1);
   const handleNextYear = () => setVisibleYear((prev) => prev + 1);
   const handleShowCurrentYear = () => setVisibleYear(currentYear);
 
   return (
-    <Screen>
+      <Screen topInset bottomInset={false}>
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <Pressable
@@ -46,7 +47,7 @@ export function AnnualSummaryScreen() {
           </Pressable>
 
           <View style={styles.titleArea}>
-            <Text style={[styles.title, { color: theme.colors.primary }]}>
+            <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.typography.serifFamily }]}>
               Resumen anual
             </Text>
             <Text style={[styles.yearLabel, { color: theme.colors.mutedText }]}>
@@ -87,7 +88,7 @@ export function AnnualSummaryScreen() {
             ]}
             onPress={handleShowCurrentYear}
           >
-            <Text style={styles.todayButtonText}>Ver año actual</Text>
+            <Text style={[styles.todayButtonText, { color: theme.colors.onPrimary }]}>Ver año actual</Text>
           </Pressable>
         ) : null}
       </View>
@@ -102,6 +103,7 @@ export function AnnualSummaryScreen() {
       ) : error ? (
         <View style={styles.center}>
           <Text style={[styles.error, { color: theme.colors.danger }]}>{error}</Text>
+          <PrimaryButton title="Reintentar" onPress={() => void refresh()} />
         </View>
       ) : (
         <View style={styles.list}>
@@ -113,7 +115,14 @@ export function AnnualSummaryScreen() {
                 monthly.month.getMonth() === new Date().getMonth() &&
                 visibleYear === currentYear
               }
-              badge="Actual"
+              badge={
+                monthly.month.getMonth() === new Date().getMonth() && visibleYear === currentYear
+                  ? "Actual"
+                  : null
+              }
+              onPressMonth={() =>
+                router.push(`/calendar?month=${monthKey(monthly.month)}` as never)
+              }
               onPressDataphone={() =>
                 router.push(`/dataphone/${monthKey(monthly.month)}` as never)
               }
@@ -136,8 +145,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   yearButton: {
-    width: 40,
-    height: 40,
+    minWidth: 44,
+    minHeight: 44,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -157,18 +166,18 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 28,
   },
   yearLabel: {
     fontSize: 14,
   },
   todayButton: {
+    minHeight: 44,
     alignSelf: "center",
+    justifyContent: "center",
     paddingVertical: 6,
   },
   todayButtonText: {
-    color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "700",
   },

@@ -1,35 +1,55 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { toIsoDate } from '../../../../core/utils/date';
+import { createFocusRefreshGuard } from '../../../../core/utils/focusRefreshGuard';
 import { UpcomingHoliday } from '../../domain/types';
-import { computeUpcomingHolidays } from '../../domain/upcoming';
-import { holidayRepository } from '../../infrastructure/container';
+import { refreshUpcomingHolidays } from '../../application/upcomingRefresh';
+import { holidayRepository, holidaySyncService } from '../../infrastructure/container';
+import { onHolidaysSynced, notifyHolidaysSynced } from '../holidaySyncEvents';
+
+export { holidaysByIso } from '../../domain/holidaysByIso';
 
 interface UseUpcomingHolidaysState {
   loading: boolean;
   holidays: UpcomingHoliday[];
+  error: string | null;
 }
 
-export function useUpcomingHolidays(withinDays = 14, limit = 3) {
+export function useUpcomingHolidays(withinDays: number | null = 14, limit = 3) {
   const [state, setState] = useState<UseUpcomingHolidaysState>({
     loading: true,
     holidays: [],
+    error: null,
   });
+
+  const shouldRefreshOnFocus = useMemo(createFocusRefreshGuard, []);
 
   const refresh = useCallback(
     async (now = new Date()) => {
       try {
-        const all = await holidayRepository.getAll();
-        const upcoming = computeUpcomingHolidays(all, now, withinDays);
+        const result = await refreshUpcomingHolidays(
+          {
+            getAll: () => holidayRepository.getAll(),
+            syncSilently: (at) => holidaySyncService.syncSilently(at),
+            syncYears: (years) => holidaySyncService.syncYears(years),
+          },
+          now,
+          withinDays,
+          limit,
+          notifyHolidaysSynced
+        );
 
         setState({
           loading: false,
-          holidays: upcoming.slice(0, limit),
+          holidays: result.holidays,
+          error: result.error,
         });
       } catch {
-        setState({
+        setState((prev) => ({
           loading: false,
-          holidays: [],
-        });
+          holidays: prev.holidays,
+          error: 'No se pudieron cargar los próximos festivos.',
+        }));
       }
     },
     [limit, withinDays]
@@ -39,17 +59,21 @@ export function useUpcomingHolidays(withinDays = 14, limit = 3) {
     void refresh();
   }, [refresh]);
 
-  return { ...state, refresh };
-}
+  useEffect(() => {
+    return onHolidaysSynced(() => {
+      void refresh();
+    });
+  }, [refresh]);
 
-export function holidaysByIso(holidays: { date: string; name: string }[]): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const holiday of holidays) {
-    if (!map.has(holiday.date)) {
-      map.set(holiday.date, holiday.name);
-    }
-  }
-  return map;
+  useFocusEffect(
+    useCallback(() => {
+      if (shouldRefreshOnFocus()) {
+        void refresh();
+      }
+    }, [refresh, shouldRefreshOnFocus])
+  );
+
+  return { ...state, refresh };
 }
 
 export function upcomingHolidayKey(date: Date): string {

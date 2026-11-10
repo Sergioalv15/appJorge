@@ -51,7 +51,7 @@ export function Toast({ message, onHide }: Props) {
         },
       ]}
     >
-      <Text style={styles.message}>{message}</Text>
+      <Text style={[styles.message, { color: theme.colors.onPrimary }]}>{message}</Text>
     </Animated.View>
   );
 }
@@ -59,7 +59,7 @@ export function Toast({ message, onHide }: Props) {
 const styles = StyleSheet.create({
   toast: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   message: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },

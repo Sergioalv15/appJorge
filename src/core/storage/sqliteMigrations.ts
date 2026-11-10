@@ -13,6 +13,8 @@ type Migration = {
   up: (db: MigratableDatabase) => Promise<void>;
 };
 
+export const CURRENT_SCHEMA_VERSION = 9;
+
 const schemaMigrations: Migration[] = [
   {
     version: 1,
@@ -151,6 +153,16 @@ const schemaMigrations: Migration[] = [
       }
     },
   },
+  {
+    version: 9,
+    name: 'set-schema-identity',
+    up: async (db) => {
+      await db.execAsync(
+        `INSERT INTO app_meta (key, value) VALUES ('schema_identity', 'appjorge')
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value;`,
+      );
+    },
+  },
 ];
 
 async function getUserVersion(db: MigratableDatabase): Promise<number> {
@@ -173,13 +185,20 @@ async function runMigrationTransaction(db: MigratableDatabase, migration: Migrat
   }
 }
 
-export async function runMigrations(db: MigratableDatabase): Promise<void> {
+export async function runMigrationsThrough(
+  db: MigratableDatabase,
+  targetVersion = CURRENT_SCHEMA_VERSION,
+): Promise<void> {
   const currentVersion = await getUserVersion(db);
   const pending = schemaMigrations
-    .filter((migration) => migration.version > currentVersion)
+    .filter((migration) => migration.version > currentVersion && migration.version <= targetVersion)
     .sort((left, right) => left.version - right.version);
 
   for (const migration of pending) {
     await runMigrationTransaction(db, migration);
   }
+}
+
+export async function runMigrations(db: MigratableDatabase): Promise<void> {
+  await runMigrationsThrough(db);
 }

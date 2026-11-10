@@ -7,11 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "appjorge",
     "userInterfaceStyle": "light",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "experiments": {
       "typedRoutes": true
     },

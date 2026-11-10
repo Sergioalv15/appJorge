@@ -1,92 +1,54 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { useCallback, useMemo, useRef } from "react";
-import { useFocusEffect, useRouter } from "expo-router";
-import { Screen } from "../../../../ui/components/Screen";
-import { useTheme } from "../../../../core/theme/ThemeProvider";
-import { useMonthlyOverview } from "../hooks/useMonthlyOverview";
-import { createFocusRefreshGuard } from "../hooks/focusRefreshGuard";
-import { KpiCard } from "../components/KpiCard";
-import { MonthSummaryCard } from "../components/MonthSummaryCard";
-import { deriveHomeKpis } from "../home/deriveHomeKpis";
-import { formatCurrency } from "../../../../core/utils/currency";
-import { addMonths, startOfMonth, monthKey } from "../../../../core/utils/date";
-import { useInvestmentBalance } from "../../investment/presentation/hooks/useInvestmentBalance";
-import { InvestmentBalanceCard } from "../../investment/presentation/components/InvestmentBalanceCard";
-import { QuickActionRow } from "../components/QuickActionRow";
-import { UpcomingHolidaysCard } from "../components/UpcomingHolidaysCard";
-import { LinearGradient } from "expo-linear-gradient";
-
-function formatRecordDate(date: string | null): string {
-  if (!date) {
-    return "Sin registros";
-  }
-
-  const parsedDate = new Date(`${date}T00:00:00`);
-
-  return parsedDate.toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function formatMonthLabel(date: Date): string {
-  return date
-    .toLocaleDateString("es-ES", {
-      month: "long",
-      year: "numeric",
-    })
-    .replace(/ de /g, " ");
-}
-
-function HeaderDivider() {
-  const { theme } = useTheme();
-  const transparent = "rgba(0,0,0,0)";
-  const edgeColor = theme.isDark ? theme.colors.white : theme.colors.black;
-
-  return (
-    <LinearGradient
-      colors={[transparent, edgeColor, transparent]}
-      locations={[0, 0.5, 1]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.headerDivider}
-    />
-  );
-}
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import Constants from 'expo-constants';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Screen } from '../../../../ui/components/Screen';
+import { PrimaryButton } from '../../../../ui/components/PrimaryButton';
+import { useTheme } from '../../../../core/theme/ThemeProvider';
+import { createFocusRefreshGuard } from '../../../../core/utils/focusRefreshGuard';
+import { formatCurrency } from '../../../../core/utils/currency';
+import { formatSpanishShortDate, monthKey, startOfMonth, toIsoDate } from '../../../../core/utils/date';
+import { useMonthlyOverview } from '../hooks/useMonthlyOverview';
+import { useMostRecentDailyRecord } from '../hooks/useMostRecentDailyRecord';
+import { useInvestmentBalance } from '../../investment/presentation/hooks/useInvestmentBalance';
+import { KpiCard } from '../components/KpiCard';
+import { UpcomingHolidaysCard } from '../components/UpcomingHolidaysCard';
+import { LastDaySummaryCard } from '../components/LastDaySummaryCard';
 
 export function HomeScreen() {
   const { theme } = useTheme();
   const router = useRouter();
-  const overviewMonth = useMemo(() => startOfMonth(new Date()), []);
-  const previousMonth = useMemo(() => addMonths(overviewMonth, -1), [overviewMonth]);
-  const { loading, error, overview, records, refresh } = useMonthlyOverview(overviewMonth);
-  const prev = useMonthlyOverview(previousMonth);
+  const [today, setToday] = useState(() => new Date());
+  const todayIso = toIsoDate(today);
+  const overviewMonthKey = monthKey(today);
+  const overviewMonth = useMemo(
+    () => startOfMonth(new Date(`${overviewMonthKey}-01T00:00:00`)),
+    [overviewMonthKey],
+  );
+  const { loading, error, overview, refresh } = useMonthlyOverview(overviewMonth);
+  const lastDaySummary = useMostRecentDailyRecord(todayIso);
   const investmentBalance = useInvestmentBalance();
   const shouldRefreshOnFocus = useRef(createFocusRefreshGuard());
 
   useFocusEffect(
     useCallback(() => {
+      const focusedAt = new Date();
+      setToday(focusedAt);
+      void lastDaySummary.refresh(toIsoDate(focusedAt));
       void investmentBalance.refresh();
 
       if (shouldRefreshOnFocus.current()) {
         void refresh();
       }
-    }, [refresh, investmentBalance.refresh]),
+    }, [refresh, investmentBalance.refresh, lastDaySummary.refresh]),
   );
 
   if (loading) {
     return (
-      <Screen>
+      <Screen topInset bottomInset={false}>
         <View style={styles.center}>
           <ActivityIndicator color={theme.colors.primary} />
-          <Text style={[styles.muted, { color: theme.colors.mutedText }]}>Cargando resumen...</Text>
+          <Text style={[styles.supportingText, { color: theme.colors.mutedText }]}>Cargando resumen...</Text>
         </View>
       </Screen>
     );
@@ -94,169 +56,283 @@ export function HomeScreen() {
 
   if (error || !overview) {
     const technicalDetail = error?.technicalMessage;
-    const shouldShowTechnicalDetail = __DEV__;
 
     return (
-      <Screen>
+      <Screen topInset bottomInset={false}>
         <View style={styles.center}>
-          <Text style={[styles.error, { color: theme.colors.danger }]}>
-            {error?.userMessage ?? "No se pudo cargar el inicio."}
+          <Text accessibilityRole="alert" style={[styles.error, { color: theme.colors.danger }]}>
+            {error?.userMessage ?? 'No se pudo cargar el inicio.'}
           </Text>
-          {shouldShowTechnicalDetail && technicalDetail ? (
-            <Text style={[styles.errorDetail, { color: theme.colors.mutedText }]}>{technicalDetail}</Text>
+          {__DEV__ && technicalDetail ? (
+            <Text style={[styles.supportingText, { color: theme.colors.mutedText }]}>{technicalDetail}</Text>
           ) : null}
-          <Pressable
-            accessibilityRole="button"
-            style={[
-              styles.button,
-              {
-                marginTop: theme.spacing.xs,
-                backgroundColor: theme.colors.primary,
-                borderRadius: theme.radius.md,
-                paddingHorizontal: theme.spacing.md,
-              },
-            ]}
-            onPress={() => void refresh()}
-          >
-            <Text style={styles.buttonText}>Reintentar</Text>
-          </Pressable>
+          <PrimaryButton title="Reintentar" onPress={() => void refresh()} />
         </View>
       </Screen>
     );
   }
 
-  const kpis = deriveHomeKpis(overview, records);
+  const businessName = Constants.expoConfig?.name ?? 'Modas Nicolas';
+  const monthName = overviewMonth.toLocaleDateString('es-ES', { month: 'long' });
+  const todayLabel = formatSpanishShortDate(today);
+  const netProfitLabel = overview.netProfit < 0 ? 'Pérdida neta' : 'Beneficio neto';
+  const formattedAvailable = investmentBalance.error
+    ? 'No disponible'
+    : investmentBalance.loading
+      ? 'Cargando…'
+      : formatCurrency(investmentBalance.available);
+  const availableValueColor = investmentBalance.error || investmentBalance.loading
+    ? theme.colors.mutedText
+    : investmentBalance.available < 0
+      ? theme.colors.danger
+      : theme.colors.investment;
+  const registerDayToday = () => {
+    const actionDate = new Date();
+    setToday(actionDate);
+    router.push(`/day/${toIsoDate(actionDate)}`);
+  };
+  const addInvestmentToday = () => {
+    const actionDate = new Date();
+    setToday(actionDate);
+    router.push(`/investment/purchase?date=${toIsoDate(actionDate)}` as never);
+  };
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <HeaderDivider />
-        <View style={styles.titleArea}>
-          <Text style={[styles.title, { color: theme.colors.primary }]}>
-            Resumen del mes
+    <Screen topInset bottomInset={false}>
+      <View style={styles.brandHeader}>
+        <View style={styles.brand}>
+          <Text
+            style={[
+              styles.businessName,
+              { color: theme.colors.text, fontFamily: theme.typography.serifFamily },
+            ]}
+          >
+            {businessName}
           </Text>
-          <Text style={[styles.monthLabel, { color: theme.colors.mutedText }]}>
-            {formatMonthLabel(overviewMonth)}
-          </Text>
+        </View>
+        <Text style={[styles.today, { color: theme.colors.mutedText }]}>{todayLabel}</Text>
+      </View>
+
+      <View style={styles.monthHeading}>
+        <Text
+          style={[
+            styles.monthName,
+            { color: theme.colors.text, fontFamily: theme.typography.serifFamily },
+          ]}
+        >
+          {`${monthName} ${overviewMonth.getFullYear()}`}
+        </Text>
+      </View>
+      <Text style={[styles.monthCaption, { color: theme.colors.mutedText }]}>Resumen del mes</Text>
+
+      <View
+        style={[
+          styles.netCard,
+          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+        ]}
+      >
+        <Text style={[styles.cardLabel, { color: theme.colors.mutedText }]}>{netProfitLabel}</Text>
+        <Text
+          accessibilityLabel={`${netProfitLabel}, ${formatCurrency(overview.netProfit)}`}
+          style={[
+            styles.netValue,
+            {
+              color:
+                overview.netProfit < 0
+                  ? theme.colors.danger
+                  : overview.netProfit > 0
+                    ? theme.colors.success
+                    : theme.colors.text,
+            },
+          ]}
+        >
+          {`${overview.netProfit < 0 ? '−' : overview.netProfit > 0 ? '+' : ''}${formatCurrency(Math.abs(overview.netProfit))}`}
+        </Text>
+      </View>
+
+      <View style={styles.metricGrid}>
+        <KpiCard label="Ventas" value={formatCurrency(overview.totalSold)} valueColor={theme.colors.sales} />
+        <KpiCard
+          label="Beneficio bruto"
+          value={formatCurrency(overview.grossProfit)}
+          valueColor={overview.grossProfit < 0 ? theme.colors.danger : overview.grossProfit > 0 ? theme.colors.success : theme.colors.text}
+        />
+        <KpiCard
+          label="Gastos"
+          value={formatCurrency(overview.totalAdditionalExpenses)}
+          valueColor={theme.colors.danger}
+        />
+        <KpiCard
+          label="Inversión asignada"
+          value={formatCurrency(overview.totalInvested)}
+          valueColor={theme.colors.investment}
+        />
+      </View>
+
+      <View style={styles.availableSection}>
+        <View style={[styles.availableCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.investment }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Disponible para invertir, ${formattedAvailable}. Ver saldo y movimientos.`}
+            accessibilityHint="Abre el saldo disponible y el historial de movimientos"
+            onPress={() => router.push('/investment/balance' as never)}
+            style={({ pressed }) => [styles.availableSummary, pressed ? styles.pressed : null]}
+          >
+            <Text style={[styles.availableLabel, { color: theme.colors.mutedText }]}>Disponible para invertir</Text>
+            <Text style={[styles.availableValue, { color: availableValueColor }]}>{formattedAvailable}</Text>
+            <Text style={[styles.availableLink, { color: theme.colors.primary }]}>Ver saldo y movimientos →</Text>
+          </Pressable>
+          {investmentBalance.error ? (
+            <Text accessibilityRole="alert" style={[styles.error, { color: theme.colors.danger }]}>
+              {investmentBalance.error}
+            </Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Agregar inversión hoy, ${todayLabel}`}
+            onPress={addInvestmentToday}
+            style={({ pressed }) => [styles.investmentAction, { backgroundColor: theme.colors.primary, borderRadius: theme.radius.sm }, pressed ? styles.pressed : null]}
+          >
+            <Text style={[styles.investmentActionLabel, { color: theme.colors.onPrimary }]}>Agregar inversión hoy</Text>
+          </Pressable>
         </View>
       </View>
 
-      <View style={styles.kpiGrid}>
-        <KpiCard
-          label="Ventas ultimo dia"
-          value={formatCurrency(kpis.ventasUltimoDia)}
-          hint={`Ultimo registro: ${formatRecordDate(kpis.lastRecordDate)}`}
-        />
-        <KpiCard
-          label="Ultimo destinado a inversion"
-          value={formatCurrency(kpis.ultimaInversion)}
-        />
-        <KpiCard
-          label="Beneficio bruto total del mes"
-          value={formatCurrency(kpis.beneficioBrutoTotalMes)}
-        />
-        <KpiCard
-          label="Beneficio neto del mes actual"
-          value={formatCurrency(kpis.beneficioNetoMesActual)}
-        />
-      </View>
+      {overview.trackedDays === 0 ? (
+        <Text style={[styles.emptyHint, { color: theme.colors.mutedText }]}>Todavía no hay registros este mes.</Text>
+      ) : null}
 
-      <View style={styles.quickActions}>
-        <QuickActionRow />
-      </View>
+      <LastDaySummaryCard loading={lastDaySummary.loading} error={lastDaySummary.error} result={lastDaySummary.result} />
 
-      <HeaderDivider />
+      <PrimaryButton
+        title="Registrar el día de hoy"
+        accessibilityLabel={`Registrar el día de hoy, ${todayLabel}`}
+        onPress={registerDayToday}
+      />
 
       <UpcomingHolidaysCard />
 
-      <HeaderDivider />
-
-      {prev.loading ? (
-        <View style={styles.prevLoading}>
-          <ActivityIndicator color={theme.colors.primary} />
-        </View>
-      ) : prev.overview ? (
-        <MonthSummaryCard
-          monthly={{ month: previousMonth, overview: prev.overview }}
-          onPressDataphone={() =>
-            router.push(`/dataphone/${monthKey(previousMonth)}` as never)
-          }
-        />
-      ) : null}
-
-      <HeaderDivider />
-
-      <InvestmentBalanceCard
-        available={investmentBalance.available}
-        adjustmentsTotal={investmentBalance.adjustmentsTotal}
-        investedTotal={investmentBalance.investedTotal}
-        purchasesTotal={investmentBalance.purchasesTotal}
-        loading={investmentBalance.loading}
-        adding={investmentBalance.adding}
-        error={investmentBalance.error ?? investmentBalance.addError}
-        onAddAdjustment={investmentBalance.addAdjustment}
-        onAddPurchase={investmentBalance.addPurchase}
-        onRefresh={() => void investmentBalance.refresh()}
-      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: 6,
+  brandHeader: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 12,
   },
-  headerDivider: {
-    width: "100%",
-    height: 1,
-  },
-  titleArea: {
+  brand: {
     flex: 1,
     minWidth: 0,
-    alignItems: "center",
-    gap: 2,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
+  businessName: {
+    fontSize: 20,
   },
-  monthLabel: {
-    fontSize: 14,
-    textTransform: "capitalize",
+  supportingText: {
+    fontSize: 12,
+    lineHeight: 18,
   },
-  kpiGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    rowGap: 10,
+  today: {
+    maxWidth: '48%',
+    fontSize: 12,
+    textAlign: 'right',
   },
-  quickActions: {
-    marginTop: 14,
+  monthHeading: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
-  prevLoading: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 20,
+  monthName: {
+    fontSize: 30,
+    lineHeight: 38,
+    textTransform: 'capitalize',
+    flexShrink: 1,
   },
-  center: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 100,
+  monthCaption: {
+    marginTop: -4,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  netCard: {
+    minWidth: 0,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    gap: 6,
+  },
+  cardLabel: {
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  netValue: {
+    fontSize: 32,
+    lineHeight: 40,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    flexShrink: 1,
+  },
+  metricGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  availableSection: {
+    gap: 8,
+  },
+  availableCard: {
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    padding: 14,
     gap: 10,
   },
-  muted: {},
+  availableSummary: {
+    gap: 2,
+  },
+  availableLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  availableValue: {
+    fontSize: 34,
+    lineHeight: 42,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    flexShrink: 1,
+  },
+  availableLink: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+  },
+  investmentAction: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  investmentActionLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  emptyHint: {
+    paddingVertical: 8,
+    fontSize: 13,
+  },
+  center: {
+    minHeight: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
   error: {
-    fontWeight: "600",
+    fontSize: 14,
+    textAlign: 'center',
   },
-  errorDetail: {
-    fontSize: 12,
-    textAlign: "center",
-  },
-  button: {
-    paddingVertical: 10,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: "700",
+  pressed: {
+    opacity: 0.68,
   },
 });

@@ -1,5 +1,10 @@
 import { DailyRecordRepository } from '../../application/DailyRecordRepository';
-import { InvestmentAdjustment, InvestmentBalance, InvestmentHistoryItem } from '../domain/types';
+import {
+  InvestmentAdjustment,
+  InvestmentBalance,
+  InvestmentHistoryPage,
+  InvestmentHistoryPageRequest,
+} from '../domain/types';
 import { InvestmentAdjustmentRepository } from './InvestmentAdjustmentRepository';
 
 export interface AddPurchaseInput {
@@ -56,7 +61,9 @@ export class InvestmentBalanceService {
     return this.adjustmentRepository.listAll(['compra']);
   }
 
-  async listHistory(): Promise<InvestmentHistoryItem[]> {
-    return this.adjustmentRepository.listHistory();
+  async listHistoryPage(
+    request: InvestmentHistoryPageRequest,
+  ): Promise<InvestmentHistoryPage> {
+    return this.adjustmentRepository.listHistoryPage(request);
   }
 }

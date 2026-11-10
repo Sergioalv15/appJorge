@@ -57,6 +57,25 @@ export class DailyRecordService {
     };
   }
 
+  async getMostRecentDailyRecord(onOrBefore: string): Promise<DailyRecordViewModel> {
+    const record = await this.repository.findMostRecentOnOrBefore(onOrBefore);
+    if (!record) {
+      return {
+        record: null,
+        profit: {
+          grossProfit: 0,
+          netProfit: 0,
+          investment: 0,
+        },
+      };
+    }
+
+    return {
+      record,
+      profit: computeDailyProfit(record),
+    };
+  }
+
   async getMonthlyOverview(date = new Date()): Promise<MonthlyOverviewViewModel> {
     const month = monthKey(date);
     const records = await this.repository.findByMonth(month);

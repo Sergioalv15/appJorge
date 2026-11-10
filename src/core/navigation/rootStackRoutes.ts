@@ -40,6 +40,13 @@ export const rootStackRoutes: RootStackRouteConfig[] = [
     },
   },
   {
+    name: 'investment/balance',
+    options: {
+      headerShown: true,
+      title: 'Capital para invertir',
+    },
+  },
+  {
     name: 'dataphone/[yearMonth]',
     options: {
       headerShown: true,
