@@ -21,7 +21,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "sergioalv961@gmail.com"
+        "appleId": "sergioalv961@gmail.com",
+        "metadataPath": "./store.config.json"
       }
     }
   }
