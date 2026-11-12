@@ -13,7 +13,7 @@ Modas Nicolas es una app para llevar las cuentas diarias de una tienda. Esta pá
 
 ## Dónde se guardan tus datos
 
-Todo lo que apuntas (ventas, gastos, cobros con datáfono, inversiones y proveedores) se guarda solo en tu dispositivo, en una base de datos local. No se envía a ningún servidor nuestro.
+Todo lo que apuntas (ventas, gastos, cobros con datáfono, inversiones y proveedores) se guarda en tu dispositivo, en una base de datos local. No se envía a ningún servidor nuestro. Si tienes activadas las copias del sistema (por ejemplo, la copia en iCloud del dispositivo), el sistema puede incluir esos datos en ellas.
 
 ## Copias de seguridad
 
@@ -21,11 +21,11 @@ Cuando exportas una copia de seguridad, la app crea un archivo con tus datos y a
 
 ## Conexión a internet
 
-La app solo se conecta a internet para descargar el calendario de festivos nacionales de España desde `calendariosnacionales.com`. En esa petición solo se indica el año; no se envía ningún dato tuyo ni de tu negocio.
+La app solo se conecta a internet para descargar el calendario de festivos nacionales de España desde `calendariosnacionales.com`. En esa petición solo se indica el año; no se envía ningún dato tuyo ni de tu negocio. Como en cualquier conexión a internet, ese servidor recibe la dirección IP desde la que se hace la petición.
 
 ## Borrar tus datos
 
-Como los datos solo están en tu dispositivo, al desinstalar la app se borran. Las copias de seguridad que hayas exportado quedan donde las guardaste.
+Al desinstalar la app se borran sus datos del dispositivo. Las copias de seguridad que hayas exportado, y las copias del sistema que ya los incluyeran, quedan donde se guardaron.
 
 ## Contacto
 

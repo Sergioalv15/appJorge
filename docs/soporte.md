@@ -16,11 +16,11 @@ En tu dispositivo. La app no usa cuentas ni servidores. Más detalles en la [pol
 
 ### ¿Cómo hago una copia de seguridad?
 
-Ve a la pestaña **Más** y pulsa **Exportar copia de seguridad**. Guarda el archivo en un lugar seguro, como Archivos, iCloud Drive o tu correo.
+Ve a la pestaña **Más** y, en **Copia de seguridad**, pulsa **Exportar**. Guarda el archivo en un lugar seguro, como Archivos, iCloud Drive o tu correo.
 
 ### ¿Cómo recupero mis datos en otro dispositivo?
 
-Instala la app, ve a **Más** y pulsa **Restaurar copia de seguridad**. Elige el archivo que exportaste. Los datos actuales del dispositivo se sustituyen por los de la copia.
+Instala la app, ve a **Más** y, en **Copia de seguridad**, pulsa **Restaurar**. Elige el archivo que exportaste. Los datos actuales del dispositivo se sustituyen por los de la copia.
 
 ### ¿Por qué no aparecen los festivos?
 
