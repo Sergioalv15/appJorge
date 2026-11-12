@@ -1,0 +1,32 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 Modas Nicolas",
+    "categories": [
+      "BUSINESS",
+      "FINANCE"
+    ],
+    "info": {
+      "es-ES": {
+        "title": "Modas Nicolas",
+        "subtitle": "Caja diaria de tu tienda",
+        "description": "Modas Nicolas es la libreta de cuentas de tu tienda en el móvil. Apunta cada día las ventas y los gastos y consulta al momento cómo va el mes.\n\nQué puedes hacer:\n\n• Registro diario: anota ventas, gastos y cobros con datáfono de cada día.\n• Resumen del mes: beneficio neto, beneficio bruto, ventas, gastos e inversión asignada de un vistazo.\n• Calendario: ve qué días tienen registros y consulta los festivos nacionales de España.\n• Balance anual: compara los meses del año y revisa las ventas por datáfono de cada mes.\n• Capital para invertir: controla el dinero disponible para reponer género, con el historial de compras y ajustes.\n• Proveedores: guarda la agenda de tus proveedores habituales.\n• Copias de seguridad: exporta tus datos a un archivo y restáuralos cuando lo necesites.\n• Tema claro y oscuro.\n\nTus datos se guardan en tu dispositivo. La app no necesita cuenta ni registro.",
+        "keywords": [
+          "caja",
+          "ventas",
+          "gastos",
+          "tienda",
+          "negocio",
+          "contabilidad",
+          "beneficio",
+          "proveedores",
+          "datáfono",
+          "inversión",
+          "comercio"
+        ],
+        "supportUrl": "https://github.com/Sergioalv15/appJorge/blob/appJorgeEstable/docs/soporte.md",
+        "privacyPolicyUrl": "https://github.com/Sergioalv15/appJorge/blob/appJorgeEstable/docs/privacidad.md"
+      }
+    }
+  }
+}
