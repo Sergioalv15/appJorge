@@ -69,8 +69,8 @@ export default function AppTabsLayout() {
           tabBarIcon: tabBarIcon('menu'),
         }}
       />
-      {/* Expo Router 58 makes `href: null` routes unreachable; hide only the tab button so /suppliers stays navigable. */}
-      <Tabs.Screen name="suppliers" options={{ tabBarButton: () => null }} />
+      {/* Expo Router 58 makes `href: null` routes unreachable; hide the whole tab item (no empty slot) so /suppliers stays navigable. */}
+      <Tabs.Screen name="suppliers" options={{ tabBarItemStyle: { display: 'none' } }} />
     </Tabs>
   );
 }

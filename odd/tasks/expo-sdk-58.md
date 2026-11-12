@@ -16,7 +16,7 @@ Branch: `chore/expo-sdk-58` (from `appJorgeEstable`). Guide: official skill `exp
 - [x] T2 [S1,S4] Bump expo to SDK 58 (`~58.0.24`, `expo install --fix`), TS 6 `baseUrl` removal, RN 0.88 type fixes — inline — baee2a9
 - [x] T3 [S1,S4] `HeaderHeightContext` from `expo-router/react-navigation`; drop unused `@react-navigation/drawer` and `elements` — inline — b70d4eb
 - [x] T4a [S1,S4] expo-file-system 58 `File.write()` became async: use `writeSync` in backup export and recovery snapshot, with tests — inline — 4d91e1c
-- [x] T4b [S1,S4] Expo Router 58 makes `href: null` tabs unreachable: hide only the suppliers tab button — inline — f96f05c
+- [x] T4b [S1,S4] Expo Router 58 makes `href: null` tabs unreachable: hide the suppliers tab item with `tabBarItemStyle: { display: 'none' }` — inline — f96f05c + fix commit
 - [x] T5 [S2,S4] Verify: typecheck, tests, expo-doctor, `prebuild --clean -p ios`, `expo run:ios` on Xcode 27 simulator, suppliers navigation — inline + independent verify
 
 ## Log
@@ -30,3 +30,5 @@ Branch: `chore/expo-sdk-58` (from `appJorgeEstable`). Guide: official skill `exp
 - L7: Evidence: typecheck exit 0; 176/176 tests; expo-doctor 19/20 (only preexisting `eas-cli` in devDependencies); `expo prebuild --clean -p ios` exit 0; `expo run:ios --device "iPhone 17"` build succeeded, installed and opened via Device Hub without the Simulator.app error; home screen and Más -> Abrir proveedores render on SDK 58 (tab bar shows 4 tabs).
 - L8: Deprecation: `HeaderHeightContext` from `expo-router/react-navigation` is marked @deprecated ("Copy the component into your codebase... Will be removed in a future SDK"); kept for now, user decision pending.
 - L9: Preexisting, out of scope: `work/investment-history-qa` imports `react-dom/client` without `@types/react-dom` (never in base package.json/lockfile; outside tsconfig include).
+- L10 (user, 2026-11-12): "porque sale la barra de navegacion alineada los iconos ala izquierda?"
+- L11: Cause: f96f05c used `tabBarButton: () => null`, which keeps the hidden item's wrapper in the flex row (5 slots of 20%, last one empty). Fix: `tabBarItemStyle: { display: 'none' }`. Simulator evidence: 4 tabs at 25% width each; Más -> Abrir proveedores still opens Proveedores. VoiceOver labels still say "N of 5" (counts the hidden route).
