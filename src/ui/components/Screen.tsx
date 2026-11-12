@@ -10,7 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Edge, SafeAreaView } from 'react-native-safe-area-context';
-import { HeaderHeightContext } from '@react-navigation/elements';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 import { useTheme } from '../../core/theme/ThemeProvider';
 
 type ScreenProps = PropsWithChildren<{

@@ -18,8 +18,6 @@
   "dependencies": {
     "@expo/metro-runtime": "~58.0.17",
     "@expo/vector-icons": "15.1.1",
-    "@react-navigation/drawer": "^7.13.6",
-    "@react-navigation/elements": "2.9.36",
     "expo": "~58.0.24",
     "expo-constants": "~58.0.16",
     "expo-dev-client": "~58.0.19",
