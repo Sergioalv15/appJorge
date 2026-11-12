@@ -1,7 +1,6 @@
 import { PropsWithChildren, useContext } from 'react';
 import {
   KeyboardAvoidingView,
-  PixelRatio,
   Platform,
   ScrollView,
   StyleSheet,
@@ -30,10 +29,8 @@ export function Screen({
   keyboardAware = false,
 }: ScreenProps) {
   const { theme } = useTheme();
-  const headerHeight = useContext(HeaderHeightContext) ?? 0;
-  // Native-stack reports the Android header origin in px; KeyboardAvoidingView expects dp.
-  const keyboardVerticalOffset =
-    Platform.OS === 'android' ? headerHeight / PixelRatio.get() : headerHeight;
+  // Expo Router 58 reports the header height in dp on both platforms (SDK 54 used px on Android).
+  const keyboardVerticalOffset = useContext(HeaderHeightContext) ?? 0;
   const { width } = useWindowDimensions();
   const safeAreaEdges: Edge[] = [
     ...(topInset ? ['top' as const] : []),

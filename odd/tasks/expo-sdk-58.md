@@ -19,6 +19,8 @@ Branch: `chore/expo-sdk-58` (from `appJorgeEstable`). Guide: official skill `exp
 - [x] T4b [S1,S4] Expo Router 58 makes `href: null` tabs unreachable: hide the suppliers tab item with `tabBarItemStyle: { display: 'none' }` — inline — f96f05c + fix commit
 - [x] T5 [S2,S4] Verify: typecheck, tests, expo-doctor, `prebuild --clean -p ios`, `expo run:ios` on Xcode 27 simulator, suppliers navigation — inline + independent verify
 - [x] T6 [S4] iOS back button labelled "(drawer)": root stack `headerBackButtonDisplayMode: 'minimal'`, with test — inline — see L13
+- [x] T7 [S4] Android SDK 58: Release build on Pixel_10_Pro emulator, smoke test — inline — no commit
+- [x] T8 [S4] Android keyboard covered the last fields: header height is dp on SDK 58, drop the px->dp division in Screen.tsx — inline — see L15
 
 ## Log
 
@@ -35,3 +37,5 @@ Branch: `chore/expo-sdk-58` (from `appJorgeEstable`). Guide: official skill `exp
 - L11: Cause: f96f05c used `tabBarButton: () => null`, which keeps the hidden item's wrapper in the flex row (5 slots of 20%, last one empty). Fix: `tabBarItemStyle: { display: 'none' }`. Simulator evidence: 4 tabs at 25% width each; Más -> Abrir proveedores still opens Proveedores. VoiceOver labels still say "N of 5" (counts the hidden route).
 - L12 (user, 2026-11-12): "arrregla tambien esto de que pone (drawer)" (screenshot: back button "< (drawer)" on "Capital para invertir").
 - L13: Cause: iOS uses the previous screen title as back label; the tab shell route is the group `(drawer)` with no title. A fixed title would be wrong (reachable from several tabs), so the root stack shows only the arrow. RED test observed, then 177/177 tests, typecheck clean; simulator: Capital para invertir shows only the back arrow.
+- L14 (user, 2026-11-12): "probamos antes en el simulador>?" (before merging PR #2).
+- L15: Android Release build OK (22 min cold). Smoke test on Pixel_10_Pro: home, 4 equal tabs, Más -> Proveedores, supplier form, backup export (share sheet with appjorge-backup.sqlite) OK, no JS errors in logcat. Regression found: in Registro del dia the keyboard covered Notas because Expo Router 58 reports the header height in dp (it compares against the 64 dp default) while Screen.tsx still divided it by PixelRatio (SDK 54 reported px). Fix: use the header height directly. Re-verified on the emulator: Notas fully above the keyboard. iOS unchanged (already used the raw value).
