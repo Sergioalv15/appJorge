@@ -18,6 +18,7 @@ Branch: `chore/expo-sdk-58` (from `appJorgeEstable`). Guide: official skill `exp
 - [x] T4a [S1,S4] expo-file-system 58 `File.write()` became async: use `writeSync` in backup export and recovery snapshot, with tests — inline — 4d91e1c
 - [x] T4b [S1,S4] Expo Router 58 makes `href: null` tabs unreachable: hide the suppliers tab item with `tabBarItemStyle: { display: 'none' }` — inline — f96f05c + fix commit
 - [x] T5 [S2,S4] Verify: typecheck, tests, expo-doctor, `prebuild --clean -p ios`, `expo run:ios` on Xcode 27 simulator, suppliers navigation — inline + independent verify
+- [x] T6 [S4] iOS back button labelled "(drawer)": root stack `headerBackButtonDisplayMode: 'minimal'`, with test — inline — see L13
 
 ## Log
 
@@ -32,3 +33,5 @@ Branch: `chore/expo-sdk-58` (from `appJorgeEstable`). Guide: official skill `exp
 - L9: Preexisting, out of scope: `work/investment-history-qa` imports `react-dom/client` without `@types/react-dom` (never in base package.json/lockfile; outside tsconfig include).
 - L10 (user, 2026-11-12): "porque sale la barra de navegacion alineada los iconos ala izquierda?"
 - L11: Cause: f96f05c used `tabBarButton: () => null`, which keeps the hidden item's wrapper in the flex row (5 slots of 20%, last one empty). Fix: `tabBarItemStyle: { display: 'none' }`. Simulator evidence: 4 tabs at 25% width each; Más -> Abrir proveedores still opens Proveedores. VoiceOver labels still say "N of 5" (counts the hidden route).
+- L12 (user, 2026-11-12): "arrregla tambien esto de que pone (drawer)" (screenshot: back button "< (drawer)" on "Capital para invertir").
+- L13: Cause: iOS uses the previous screen title as back label; the tab shell route is the group `(drawer)` with no title. A fixed title would be wrong (reachable from several tabs), so the root stack shows only the arrow. RED test observed, then 177/177 tests, typecheck clean; simulator: Capital para invertir shows only the back arrow.
