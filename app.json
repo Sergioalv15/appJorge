@@ -7,7 +7,11 @@
     "icon": "./assets/icon.png",
     "scheme": "appjorge",
     "userInterfaceStyle": "light",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "experiments": {
       "typedRoutes": true
     },
@@ -20,7 +24,11 @@
           "supportsOpeningDocumentsInPlace": true
         }
       ],
-      "expo-document-picker"
+      "expo-document-picker",
+      "expo-font",
+      "expo-sharing",
+      "expo-sqlite",
+      "expo-status-bar"
     ],
     "android": {
       "package": "com.appjorge.mobile",
