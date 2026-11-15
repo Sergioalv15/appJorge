@@ -36,7 +36,7 @@ async function exportBackup(): Promise<BackupResult> {
     dir.create({ idempotent: true, intermediates: true });
     const file = new File(dir, BACKUP_FILE_NAME);
     file.create({ overwrite: true, intermediates: true });
-    file.write(bytes);
+    file.writeSync(bytes);
 
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(file.uri, { mimeType: 'application/x-sqlite3' });
@@ -155,7 +155,7 @@ async function persistRecoverySnapshot(bytes: Uint8Array): Promise<string> {
   const filename = `pre-restore-${Date.now()}-${Math.random().toString(16).slice(2)}.sqlite`;
   const file = new File(directory, filename);
   file.create({ overwrite: false, intermediates: true });
-  file.write(bytes);
+  file.writeSync(bytes);
 
   if (!file.exists || file.info().size !== bytes.byteLength) {
     throw new Error('No se pudo guardar la copia de recuperación');

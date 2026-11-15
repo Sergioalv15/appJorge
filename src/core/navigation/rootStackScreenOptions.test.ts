@@ -21,6 +21,13 @@ describe("rootStackScreenOptions", () => {
     });
   });
 
+  it("shows only the back arrow so iOS never labels it with the (drawer) route group", () => {
+    expect(rootStackScreenOptions.headerBackButtonDisplayMode).toBe("minimal");
+    expect(createRootStackScreenOptions(resolveTheme("dark")).headerBackButtonDisplayMode).toBe(
+      "minimal",
+    );
+  });
+
   it("maps dark-mode stack colors from resolved theme", () => {
     const darkTheme = resolveTheme("dark");
     const darkOptions = createRootStackScreenOptions(darkTheme);

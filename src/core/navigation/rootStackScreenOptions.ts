@@ -5,6 +5,8 @@ export function createRootStackScreenOptions(theme: AppTheme = Theme) {
     headerShown: false,
     headerStyle: { backgroundColor: theme.colors.surface },
     headerTintColor: theme.colors.text,
+    // The tab shell route is the group `(drawer)`; iOS would otherwise use it as the back button label.
+    headerBackButtonDisplayMode: 'minimal' as const,
     contentStyle: { backgroundColor: theme.colors.background },
     headerShadowVisible: false,
     headerTitleStyle: {

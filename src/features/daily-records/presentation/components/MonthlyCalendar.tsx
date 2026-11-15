@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     top: WEEKDAY_ROW_HEIGHT,
     zIndex: 1,
     alignItems: "center",

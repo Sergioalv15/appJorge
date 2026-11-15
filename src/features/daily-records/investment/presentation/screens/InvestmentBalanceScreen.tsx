@@ -229,7 +229,7 @@ export function InvestmentBalanceScreen() {
         )}
         ListEmptyComponent={!historyLoading && !historyError ? (
           <Text style={[styles.stateText, { color: theme.colors.mutedText }]}>No hay movimientos para estos filtros.</Text>
-        ) : null}
+        ) : undefined}
         ListFooterComponent={(
           <View style={styles.listFooter}>
             {loadingMore ? <ActivityIndicator color={theme.colors.primary} /> : null}

@@ -1,7 +1,6 @@
 import { PropsWithChildren, useContext } from 'react';
 import {
   KeyboardAvoidingView,
-  PixelRatio,
   Platform,
   ScrollView,
   StyleSheet,
@@ -10,7 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Edge, SafeAreaView } from 'react-native-safe-area-context';
-import { HeaderHeightContext } from '@react-navigation/elements';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 import { useTheme } from '../../core/theme/ThemeProvider';
 
 type ScreenProps = PropsWithChildren<{
@@ -30,10 +29,8 @@ export function Screen({
   keyboardAware = false,
 }: ScreenProps) {
   const { theme } = useTheme();
-  const headerHeight = useContext(HeaderHeightContext) ?? 0;
-  // Native-stack reports the Android header origin in px; KeyboardAvoidingView expects dp.
-  const keyboardVerticalOffset =
-    Platform.OS === 'android' ? headerHeight / PixelRatio.get() : headerHeight;
+  // Expo Router 58 reports the header height in dp on both platforms (SDK 54 used px on Android).
+  const keyboardVerticalOffset = useContext(HeaderHeightContext) ?? 0;
   const { width } = useWindowDimensions();
   const safeAreaEdges: Edge[] = [
     ...(topInset ? ['top' as const] : []),
